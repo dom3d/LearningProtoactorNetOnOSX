@@ -1,5 +1,5 @@
 # Learning Protoactor-Net On OSX
-Set of example projects for me to explore Protoactor-Net on OSX using Visual Studio for Mac and DotNetCore. Documenting as I go as the documentation is quit thin.
+Set of example projects for me to explore Protoactor-Net on OSX using Visual Studio for Mac and DotNetCore. Taking notes as I go as the documentation is quit thin. Share my notes and code in case it helps somebody else to pick this up faster.
 
 # Preparation work to get started with Protoactor-Net on OSX
 Source code doesn’t build out of the box on OSX despite using the Cake Build system as of Jun 2017. Using Visual Studio for Mac (MacVS) and prebuilt libs instead. (Note that I am not using docker/containers or any VM here)
@@ -7,12 +7,15 @@ Source code doesn’t build out of the box on OSX despite using the Cake Build s
 ## In the OSX / iterm2 terminal window: 
 
 ### Installing the Protobuffer tools we need
-— brew install protobuf
-— brew install --with-plugins grpc
-— which grpc_csharp_plugin
+	brew install protobuf
+	brew install --with-plugins grpc
+
+Understand where the plugin is installed as you will need the full path when using the protobuffer compiler.
+
+	which grpc_csharp_plugin
 
 ### Installing Consul
-- brew install consul
+	brew install consul
 
 ## In MacVS:
 — create dotnet core console app
