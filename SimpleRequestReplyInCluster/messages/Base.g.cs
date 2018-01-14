@@ -22,12 +22,13 @@ namespace Messages {
     static BaseReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpiYXNlLnByb3RvEghtZXNzYWdlcyIOCgxIZWxsb1JlcXVlc3QiIAoNSGVs",
-            "bG9SZXNwb25zZRIPCgdNZXNzYWdlGAEgASgJQguqAghNZXNzYWdlc2IGcHJv",
-            "dG8z"));
+            "CgpiYXNlLnByb3RvEghtZXNzYWdlcyIoCg1SZXF1ZXN0VGFyZ2V0EhcKD1Rh",
+            "cmdldEFjdG9yTmFtZRgBIAEoCSIOCgxIZWxsb1JlcXVlc3QiIAoNSGVsbG9S",
+            "ZXNwb25zZRIPCgdNZXNzYWdlGAEgASgJQguqAghNZXNzYWdlc2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.RequestTarget), global::Messages.RequestTarget.Parser, new[]{ "TargetActorName" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.HelloRequest), global::Messages.HelloRequest.Parser, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.HelloResponse), global::Messages.HelloResponse.Parser, new[]{ "Message" }, null, null, null)
           }));
@@ -36,6 +37,123 @@ namespace Messages {
 
   }
   #region Messages
+  public sealed partial class RequestTarget : pb::IMessage<RequestTarget> {
+    private static readonly pb::MessageParser<RequestTarget> _parser = new pb::MessageParser<RequestTarget>(() => new RequestTarget());
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<RequestTarget> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Messages.BaseReflection.Descriptor.MessageTypes[0]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public RequestTarget() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public RequestTarget(RequestTarget other) : this() {
+      targetActorName_ = other.targetActorName_;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public RequestTarget Clone() {
+      return new RequestTarget(this);
+    }
+
+    /// <summary>Field number for the "TargetActorName" field.</summary>
+    public const int TargetActorNameFieldNumber = 1;
+    private string targetActorName_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string TargetActorName {
+      get { return targetActorName_; }
+      set {
+        targetActorName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as RequestTarget);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(RequestTarget other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (TargetActorName != other.TargetActorName) return false;
+      return true;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (TargetActorName.Length != 0) hash ^= TargetActorName.GetHashCode();
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (TargetActorName.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(TargetActorName);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (TargetActorName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(TargetActorName);
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(RequestTarget other) {
+      if (other == null) {
+        return;
+      }
+      if (other.TargetActorName.Length != 0) {
+        TargetActorName = other.TargetActorName;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            TargetActorName = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
   public sealed partial class HelloRequest : pb::IMessage<HelloRequest> {
     private static readonly pb::MessageParser<HelloRequest> _parser = new pb::MessageParser<HelloRequest>(() => new HelloRequest());
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -43,7 +161,7 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Messages.BaseReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Messages.BaseReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -132,7 +250,7 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Messages.BaseReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Messages.BaseReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

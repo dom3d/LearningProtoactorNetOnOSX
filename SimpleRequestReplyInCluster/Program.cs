@@ -1,100 +1,138 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Messages;
 using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
 using Proto.Remote;
-using ProtosReflection = Messages.BaseReflection; // generated meta data. Name based of used proto file-name (here base.proto)
+using ExampleProtocol = Messages.BaseReflection; // generated meta data. Name based of used proto file-name (here base.proto)
 
-// variation of https://github.com/tomliversidge/protoactor-dotnet/tree/business_handshake/examples/ClusterHelloWorld
 namespace SimpleRequestReplyInCluster
 {
+	class ClusterConfig
+	{
+		public static readonly string Name = "ProtoActorCluster";
+	}
+
+	class RequesterNodeConfig
+	{
+		public static string ip = "127.0.0.1";
+		public static int port = 12005;
+	}
+
+	class AnsweringNodeConfig
+	{
+		public static string ip = "127.0.0.1";
+		public static int port = 12006;
+	}
+
 	class App
 	{
 		static void Main(string[] args)
 		{
-			if(args.Length == 0)
+			Console.WriteLine("Hello ProtoActor example. Make sure Answerer Node (-a) is running first as this is a one-time 'send and answer' example!");
+			if (args.Length == 0)
 			{
 				Console.WriteLine("Missing command line args. Please specify node type by using the param -r or -a.");
 				return;
 			}
 
-			// Asuming that Consul Service is running 
+			// From here on, asuming that Consul Service is running
 
-			if(args[0] == "-r")
+			// Register protobuf messages
+			Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
+
+			// start choosen node and join cluster
+			if (args[0] == "-r")
 			{
-				RequesterNode program = new RequesterNode();
-				program.Run();
+				Console.WriteLine("-r Mode: Requester Node");
+
+				// actor setup definition and registration of that definition
+				Props requesterKind = Actor.FromProducer(() => new RequesterActor());
+				Remote.RegisterKnownKind(RequesterActor.TypeName, requesterKind);
+
+				// Start the server and join the cluster. Known Actors will be spawned automatically
+				Cluster.Start(ClusterConfig.Name, RequesterNodeConfig.ip, RequesterNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
+
+				PID requesterActor = Actor.Spawn(requesterKind);
+				requesterActor.Tell(new RequestTarget() { TargetActorName = AnsweringActor.TypeName});
 			}
 			else if (args[0] == "-a")
 			{
-				AnsweringNode program = new AnsweringNode();
-				program.Run();
+				Console.WriteLine("-a Mode: Answerer Node");
+				// actor
+				Props answeringKind = Actor.FromProducer(() => new AnsweringActor());
+				Remote.RegisterKnownKind(AnsweringActor.TypeName, answeringKind);
+				// Start the server and join the cluster. Known Actors will be spawned automatically
+				Cluster.Start(ClusterConfig.Name, AnsweringNodeConfig.ip, AnsweringNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
 			}
 			else
 			{
-				Console.WriteLine("Wrong command line args. Please specify node type by using the param -r or -a.");	
+				Console.WriteLine("Wrong command line args. Please specify node type by using the param -r or -a.");
 			}
-        }
-    }
 
-	class ClusterConfig
-	{
-		public static readonly string ClusterName = "ProtoactorCluster";
-		public static readonly string ClusterKind = "SimpleRequestReplyInCluster"; // some kind of partitioning to speed up or is it the Consul tags to tagg services
-	}
-
-	class RequesterNode
-	{
-		public void Run()
-		{
-			Console.WriteLine("Hello World, firing up the engine with Requester Node. Make sure Replier is running first !");
-
-			Serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
-			Remote.Start("127.0.0.1", 12001);
-			Cluster.Start(ClusterConfig.ClusterName, new ConsulProvider(new ConsulProviderOptions()));
-			Proto.PID pid = Cluster.GetAsync(ClusterConfig.ClusterName, ClusterConfig.ClusterKind).Result;
-
-			Console.WriteLine("Press ENTER to send a request to Replier Node (make sure it's up and running first)");
-			Console.ReadLine();
-
-			Console.WriteLine("Sending out a request message to Replier Node ...");
-
-			HelloResponse res = pid.RequestAsync<HelloResponse>(new HelloRequest()).Result;
-			Console.WriteLine(res.Message);
 			Console.WriteLine("Hit ENTER to allow this node to terminate.");
+			Console.ReadKey();
 		}
 	}
 
-	class AnsweringNode
+	sealed class RequesterActor : IActor
 	{
-		public void Run()
+		public static readonly string TypeName = "RequesterAct";
+
+		public Task ReceiveAsync(IContext context)
 		{
-			Console.WriteLine("Hello World, firing up the engine with Answering Node ...");
-
-			Serialization.RegisterFileDescriptor(ProtosReflection.Descriptor);
-			Props props = Actor.FromFunc(ctx =>
+			switch (context.Message)
 			{
-				switch (ctx.Message)
-				{
-					case HelloRequest _:
-						ctx.Respond(new HelloResponse
-						{
-							Message = "Hello, this is a reply message from Anwsering Node."
-						});
-						Console.WriteLine("Received a request and replied.");
-						Console.WriteLine("Hit ENTER to allow this node to terminate.");
-						break;
-				}
-				return Actor.Done;
-			});
+				case RequestTarget kickoff:
+					string targetActorName = kickoff.TargetActorName;
+					Console.WriteLine("Received a Target for a Hello Request, which is " + targetActorName);
 
-			Remote.RegisterKnownKind(ClusterConfig.ClusterKind, props);
-			Remote.Start("127.0.0.1", 12000);
-			Cluster.Start(ClusterConfig.ClusterName, new ConsulProvider(new ConsulProviderOptions()));
+					// get target reference
+					Stopwatch timer = Stopwatch.StartNew();
+					timer.Start();
+					string dummy = "noideaWhatThisIsFor";
+					var (pid, getStatus) = Cluster.GetAsync(dummy, AnsweringActor.TypeName).Result;
+					while (getStatus == ResponseStatusCode.Unavailable)
+					{
+						(pid, getStatus) = Cluster.GetAsync(dummy, AnsweringActor.TypeName).Result;
+					}
 
-			Console.WriteLine("Now start Requester, waiting for the message");
-			Console.ReadLine();
+					timer.Stop();
+					Console.WriteLine("\nGot hold on target reference in (ms): " +  timer.ElapsedMilliseconds);
+					if (getStatus == ResponseStatusCode.OK)
+					{
+						HelloResponse answer = pid.RequestAsync<HelloResponse>(new HelloRequest()).Result;
+						Console.WriteLine("Received as answer: " + answer.Message);
+					}
+					else
+					{
+						Console.WriteLine("Failed to get a hold on target: " + getStatus.ToString());
+					}
+					break;
+			}
+			return Actor.Done;
+		}
+	}
+
+	sealed class AnsweringActor : IActor
+	{
+		public static readonly string TypeName = "AnsweringAct";
+		
+		public Task ReceiveAsync(IContext context)
+		{
+			switch (context.Message)
+			{
+				case HelloRequest _:
+					context.Respond(new HelloResponse
+					{
+						Message = "Hello, this is a reply message from Anwsering Node."
+					});
+					Console.WriteLine("Received a request and replied.");
+					break;
+			}
+			return Actor.Done;
 		}
 	}
 }

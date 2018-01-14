@@ -2,6 +2,9 @@ syntax = "proto3";
 package messages;
 option csharp_namespace = "Messages";
 
+message RequestTarget {
+    string TargetActorName=1;
+}
 message HelloRequest {}
 message HelloResponse {
     string Message=1;
