@@ -22,13 +22,14 @@ namespace Messages {
     static BaseReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgpiYXNlLnByb3RvEghtZXNzYWdlcyIoCg1SZXF1ZXN0VGFyZ2V0EhcKD1Rh",
-            "cmdldEFjdG9yTmFtZRgBIAEoCSIOCgxIZWxsb1JlcXVlc3QiIAoNSGVsbG9S",
-            "ZXNwb25zZRIPCgdNZXNzYWdlGAEgASgJQguqAghNZXNzYWdlc2IGcHJvdG8z"));
+            "CgpiYXNlLnByb3RvEghtZXNzYWdlcyI4Cg1SZXF1ZXN0VGFyZ2V0EhcKD1Rh",
+            "cmdldEFjdG9yTmFtZRgBIAEoCRIOCgZyZXBlYXQYAiABKAgiDgoMSGVsbG9S",
+            "ZXF1ZXN0IiAKDUhlbGxvUmVzcG9uc2USDwoHTWVzc2FnZRgBIAEoCUILqgII",
+            "TWVzc2FnZXNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.RequestTarget), global::Messages.RequestTarget.Parser, new[]{ "TargetActorName" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.RequestTarget), global::Messages.RequestTarget.Parser, new[]{ "TargetActorName", "Repeat" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.HelloRequest), global::Messages.HelloRequest.Parser, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.HelloResponse), global::Messages.HelloResponse.Parser, new[]{ "Message" }, null, null, null)
           }));
@@ -62,6 +63,7 @@ namespace Messages {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public RequestTarget(RequestTarget other) : this() {
       targetActorName_ = other.targetActorName_;
+      repeat_ = other.repeat_;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -80,6 +82,17 @@ namespace Messages {
       }
     }
 
+    /// <summary>Field number for the "repeat" field.</summary>
+    public const int RepeatFieldNumber = 2;
+    private bool repeat_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Repeat {
+      get { return repeat_; }
+      set {
+        repeat_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as RequestTarget);
@@ -94,6 +107,7 @@ namespace Messages {
         return true;
       }
       if (TargetActorName != other.TargetActorName) return false;
+      if (Repeat != other.Repeat) return false;
       return true;
     }
 
@@ -101,6 +115,7 @@ namespace Messages {
     public override int GetHashCode() {
       int hash = 1;
       if (TargetActorName.Length != 0) hash ^= TargetActorName.GetHashCode();
+      if (Repeat != false) hash ^= Repeat.GetHashCode();
       return hash;
     }
 
@@ -115,6 +130,10 @@ namespace Messages {
         output.WriteRawTag(10);
         output.WriteString(TargetActorName);
       }
+      if (Repeat != false) {
+        output.WriteRawTag(16);
+        output.WriteBool(Repeat);
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -122,6 +141,9 @@ namespace Messages {
       int size = 0;
       if (TargetActorName.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(TargetActorName);
+      }
+      if (Repeat != false) {
+        size += 1 + 1;
       }
       return size;
     }
@@ -133,6 +155,9 @@ namespace Messages {
       }
       if (other.TargetActorName.Length != 0) {
         TargetActorName = other.TargetActorName;
+      }
+      if (other.Repeat != false) {
+        Repeat = other.Repeat;
       }
     }
 
@@ -146,6 +171,10 @@ namespace Messages {
             break;
           case 10: {
             TargetActorName = input.ReadString();
+            break;
+          }
+          case 16: {
+            Repeat = input.ReadBool();
             break;
           }
         }

@@ -4,6 +4,7 @@ option csharp_namespace = "Messages";
 
 message RequestTarget {
     string TargetActorName=1;
+    bool repeat=2;
 }
 message HelloRequest {}
 message HelloResponse {

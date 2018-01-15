@@ -56,7 +56,7 @@ namespace SimpleRequestReplyInCluster
 				Cluster.Start(ClusterConfig.Name, RequesterNodeConfig.ip, RequesterNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
 
 				PID requesterActor = Actor.Spawn(requesterKind);
-				requesterActor.Tell(new RequestTarget() { TargetActorName = AnsweringActor.TypeName});
+				requesterActor.Tell(new RequestTarget() { TargetActorName = AnsweringActor.TypeName, Repeat = true});
 			}
 			else if (args[0] == "-a")
 			{
@@ -81,11 +81,14 @@ namespace SimpleRequestReplyInCluster
 	{
 		public static readonly string TypeName = "RequesterAct";
 
+		private int counter = 0;
+
 		public Task ReceiveAsync(IContext context)
 		{
 			switch (context.Message)
 			{
 				case RequestTarget kickoff:
+					++counter;
 					string targetActorName = kickoff.TargetActorName;
 					Console.WriteLine("Received a Target for a Hello Request, which is " + targetActorName);
 
@@ -103,8 +106,15 @@ namespace SimpleRequestReplyInCluster
 					Console.WriteLine("\nGot hold on target reference in (ms): " +  timer.ElapsedMilliseconds);
 					if (getStatus == ResponseStatusCode.OK)
 					{
+						timer.Restart();
 						HelloResponse answer = pid.RequestAsync<HelloResponse>(new HelloRequest()).Result;
+						timer.Stop();
 						Console.WriteLine("Received as answer: " + answer.Message);
+						Console.WriteLine("Received answer in (ms): " + timer.ElapsedMilliseconds);
+						if (kickoff.Repeat)
+						{
+							context.Self.Tell(new RequestTarget() { TargetActorName = AnsweringActor.TypeName, Repeat = false });
+						}
 					}
 					else
 					{
