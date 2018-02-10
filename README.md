@@ -106,28 +106,31 @@ When an Actor is spawn by another Actor, the given ID is the hierachical path li
 
 PID is somewhat "polluted" with some conviences methods such as: Tell, Request, SendSystemMessage, Stop. Eventually the use the ProcessRegistry to get a reference to the Process instance itself.
 
+An ID has to be unique across the system and across a cluster.
+
 ## ProcessRegistry
-Provides IDs for new Process/Actor instances. If a name is not given for a new actor, then the ProcessRegistry will create one based on "$" + internal ounter.
+Provides IDs for new Process/Actor instances. If a name is not given for a new actor, then the ProcessRegistry will create one based on "$" + internal counter.
 
 ### Context
 Context is passed to an Actor and contains contextual information and provides an API to interact with that data (such as actor children). While processing a message in an actor, you can access the following via the Context object:
 
 - the actor's PID via context.Self
 - the actor's parent PID via context.Parent
-- message sender's PID: context.Sender. WARNING can be NULL !!!
+- message sender's PID: context.Sender. WARNING can be NULL !!! (In fact it's null all the time in my experiments and i don't know why)
 - methods to spawn actors as children
 - stash pending messages e.g. for recovery purposes
 etc.
 
 ## Props
-The 'Props' is taken from movies and theather where an object used on stage or on screen by actors during a performance or screen production.
+The 'Props' is taken from movies and theather where an object that used (on stage or on screen) by actors during a performance or screen production is called a prop.
 
-For ProtoActor think of Props being a "Recipe/Configuration" for the creation of an Actor, sometimes it's also referred to as "kind". You register a kind by handing over a Prop and give it a name.
+For ProtoActor think of Props being a "Recipe/Configuration" for the creation of an Actor, sometimes it's also referred to as "kind". You register a kind by handing over a Prop and a name.
 
 (Actor)Producer: creates a new Actor. MailboxProducer creates a new mailbox. Message routing middleware configuration, Supervision Strategy. A cluster is patitioned automatically by 'kind' using a PartitionActor.
 ('Kind' as a partition is also referred as Grain?)
 
-Actors combined with a setup are referred to as "kind". "Named Actors" helps when there a multiple of the same kind to distinguish between them when it's needed'
+Actors combined with a setup are referred to as "kind". "Named" Activations - is spawning an Actor via it's kind using unique name across kinds and acts as global ID of the register kind.
+It's possible to register multiple kinds with the same name without errors, unfortunately.
 
 ## Remote
 Remote is the layer that allows to connect ProtoActor instances with each other. Each instance becomes a node with an Endpoint; a server with an adresss.
@@ -138,7 +141,7 @@ You can
 - send Messages to a Remote Process/Actor (Remote.SendMessage)
 - watch Remote Processes/Actor (e.g. to be informed about it's termination)
 
-In order to be able to spawn Actors from remote nodes, the remote ProtoActor instance has to register Actor Props ('Actor Setups') via Remote.RegisterKnownKinds first. So only pre-registered Props can be spawned remotely.
+In order to be able to spawn Actors from remote nodes, the remote ProtoActor instance has to register Actor Props ('Actor Setups') via Remote.RegisterKnownKinds first. So only pre-registered Props can be spawned remotely. Be aware that you can register different kinds using the same name - but that's a problem because the name has to be unique across the cluster and across all kinds registered.
 
 Remote Start will start the gRPC server on the given IP and Port.
 
@@ -164,8 +167,9 @@ all nodes in the cluster will register as the same service in consul, where the 
 and each of those entries have tags for known kinds
 
 Cluster.Start: It stats the cluster module and joins the cluster. but it is dependant on Consul so you need to have a consul agent running also
+A better name would probably be "Cluster.Join"
 
-Shutdown should really be called "Leave" as it informs your app to leave the cluster
+Cluster.Shutdown should really be called "Leave" as it informs your app to leave the cluster
 or Deregister
 
 ## Grain (Virtual Actor)
@@ -182,8 +186,7 @@ If you are using cluster, you can generate "Grains" using the protoc grain gener
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
 
-## Deeper topics
-
+## Deeper topics, unsorted notes.
 
 
 **Actor Spawning**: creation of a LocalContext and a LocalProcess (with a new Mailbox) that is registered in the ProcessRegistry to get a unique PID. A first SystemMessage (Started) is sent to the Actor.
