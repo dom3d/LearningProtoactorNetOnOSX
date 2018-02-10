@@ -1,0 +1,8 @@
+syntax = "proto3";
+package messages;
+option csharp_namespace = "Messages";
+
+message SimHeartBeat {}
+message JoinChannel {}
+message LeaveChannel {}
+message IntValue { int32 number = 1; }

@@ -7,16 +7,12 @@
 
   <ItemGroup>
     <PackageReference Include="Proto.Actor" Version="0.1.16" />
+    <PackageReference Include="Proto.Mailbox" Version="0.1.16" />
     <PackageReference Include="Proto.Router" Version="0.1.16" />
     <PackageReference Include="Proto.Remote" Version="0.1.16" />
     <PackageReference Include="Proto.Actor.Extensions" Version="0.1.16" />
     <PackageReference Include="Proto.Cluster" Version="0.1.16" />
     <PackageReference Include="Proto.Cluster.Consul" Version="0.1.16" />
     <PackageReference Include="Proto.Schedulers.SimpleScheduler" Version="0.1.16" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="simulator\" />
-    <Folder Include="simulator\sim_messages\" />
-    <Folder Include="simulator\actors\" />
   </ItemGroup>
 </Project>
