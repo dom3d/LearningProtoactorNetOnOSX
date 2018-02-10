@@ -39,7 +39,7 @@ Consul.io is used for the automatic Clustering aspect of ProtoActor. Get it up a
 	consul agent -dev -advertise 127.0.0.1
 
 # Understanding the API Layers
-ProtoActor is build in stages as layers and each layer sits ontop of the previous one:
+ProtoActor is build in stages. More recent layers sit somewhat ontop of the previous one but with blurry intersections.
 
 ## Actor
 'Actor' is the basic and core layer allowing one to create a system of actors that message each other within a single CPU/OS process.
@@ -52,7 +52,7 @@ The 'Remote' layer allows you to manually connect ProtoActor Instances. It provi
 - etc
 
 ## Cluster
-'Cluster' automates the aspect of building and managing a grid of connected ProtoActor instances. (Intance is sometimes referred to as Node or Server). It relies on 3rd party solutions such Consul. An instances joins and leaves a Cluster via the Cluster API.
+'Cluster' automates the aspect of building and managing a grid of connected ProtoActor instances. (Intance is sometimes referred to as Node or Server). It relies on 3rd party solutions such as Consul. An instances joins and leaves a Cluster via the Cluster API.
 
 ## Virtual Actors (Grains)
 This feature automates the placement and spawning of Actors in a Cluster. This is mostly achieved by defining the RPC interfaces via protobuf definition files.
@@ -78,11 +78,11 @@ Maybe "Target" would actually have been a better name.
 The Mailbox is the thing that stores messages that a Process received. It actually also covers the triggering of reactive processing as Tasks across Threads.
 
 ### Actor
-Explained in a simplified way: Actors are a way to decompose your application logic into small units that don't use/reference each other directly but only interact through messages. Actors use addresses representing other actors to define where a message should be send to.
+Explained in a simplified way: Actors are a way to decompose your application logic into small units that don't use/reference each other directly but only interact through messages. Actors use addresses that potentially represent other actors and those are used to define where a message should be send to.
 
 Actor is a reactive unit that processes messages from a mailbox. A message is not passed directly into an ProtoActor but via a context object.
 
-Although ProtoActor talks about Actors mostly under the hood the concept of "actors" require a composition of systems such Mailbox, Context, Process, Props etc.
+Although ProtoActor talks about Actors mostly, under the hood the concept of "actors" require a composition of systems such Mailbox, Context, Process, Props etc.
 
 Axioms of Actors:
 - an actor can send messages to other actors (send)
@@ -122,15 +122,13 @@ Context is passed to an Actor and contains contextual information and provides a
 etc.
 
 ## Props
-The 'Props' is taken from movies and theather where an object that used (on stage or on screen) by actors during a performance or screen production is called a prop.
+The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
 
-For ProtoActor think of Props being a "Recipe/Configuration" for the creation of an Actor, sometimes it's also referred to as "kind". You register a kind by handing over a Prop and a name.
+For ProtoActor, think of Props being a "Recipe/Configuration" for the creation of an Actor, sometimes it's also referred to as "kind". You register a Kind by handing over a Prop and a name.
 
 (Actor)Producer: creates a new Actor. MailboxProducer creates a new mailbox. Message routing middleware configuration, Supervision Strategy. A cluster is patitioned automatically by 'kind' using a PartitionActor.
-('Kind' as a partition is also referred as Grain?)
 
-Actors combined with a setup are referred to as "kind". "Named" Activations - is spawning an Actor via it's kind using unique name across kinds and acts as global ID of the register kind.
-It's possible to register multiple kinds with the same name without errors, unfortunately.
+Actors combined with a setup are referred to as "kind".
 
 ## Remote
 Remote is the layer that allows to connect ProtoActor instances with each other. Each instance becomes a node with an Endpoint; a server with an adresss.
@@ -143,15 +141,20 @@ You can
 
 In order to be able to spawn Actors from remote nodes, the remote ProtoActor instance has to register Actor Props ('Actor Setups') via Remote.RegisterKnownKinds first. So only pre-registered Props can be spawned remotely. Be aware that you can register different kinds using the same name - but that's a problem because the name has to be unique across the cluster and across all kinds registered.
 
-Remote Start will start the gRPC server on the given IP and Port.
+Remote Start will start the gRPC server on the given IP and Port. Maybe "Peering" or something like that would be a better name.
 
 Ability to watch a remote Actor: When a node is disconnected, and if someone is watching an actor on that node, then the EndpointWatcher is supposed to fire a Terminated event for that actor.
 
 ProtoActor dont support remote supervision, when you spawn remote actors they are root actors on the remote system.
 
+## Activations / Activator
+"Named" Activations - is spawning an Actor via it's kind using unique name across kinds and acts as global ID of the register kind. It's possible to register multiple kinds with the same name without errors, unfortunately.
+
+Spawning is done by a special system actor called Activator. It's one of those hidden things that appear here and there in the API but isn't very explicit.
+
 ----------------------------------------------------------------
 ----------------------------------------------------------------
-END of revised notes. Below is most likely inaccurate or wrong
+END of revised notes. Below is most likely inaccurate or wrong. Also may contain quotes taked from various places.
 ----------------------------------------------------------------
 ----------------------------------------------------------------
 
@@ -161,13 +164,11 @@ Clustering where the name caching / ownership lives
 
 Cluster.get does a remote activation if needed. Duplication possible.
 
-in clustering a remote node would be a "Member" as its a member of the cluster... while in remoting its just a , what? endpoint?
+In clustering a remote node would be a "Member" as its a member of the cluster... while in remoting its just a ... what? ... an endpoint? ... a peer?
 
-all nodes in the cluster will register as the same service in consul, where the cluster name is the service name in consul
-and each of those entries have tags for known kinds
+All nodes in the cluster will register as the same service in consul, where the cluster name is the service name in consul and each of those entries have tags for known kinds
 
-Cluster.Start: It stats the cluster module and joins the cluster. but it is dependant on Consul so you need to have a consul agent running also
-A better name would probably be "Cluster.Join"
+Cluster.Start: It starts the cluster module and joins the cluster. It is dependant on Consul so you need to have a consul agent running first. A better name would probably be "Cluster.Join"
 
 Cluster.Shutdown should really be called "Leave" as it informs your app to leave the cluster
 or Deregister
@@ -181,7 +182,7 @@ Virtual Actors/Grains are RPC based
 types grains from protobuf definitions via code-gen.
 https://files.gitter.im/AsynkronIT/protoactor/kepm/blob
 https://files.gitter.im/AsynkronIT/protoactor/YqnA/blob
-A grain is a virtual actor, same as MS Orleans.. we can now specify RPC services in the proto files, and generate typed C# code and the Proto.Actor cluster will connect everything for us. so node1 can ask for a grain of a specific type, and it will be found or created on another node
+A grain is a virtual actor, same as MS Orleans.. One can  specify RPC services in the proto files, and generate typed C# code and the Proto.Actor cluster will connect everything automatically. so node1 can ask for a grain of a specific type, and it will be found or created on another node
 If you are using cluster, you can generate "Grains" using the protoc grain generator.. those are typed actors with an RPC like interface (much like Microsoft Orleans)
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
@@ -192,6 +193,8 @@ Grains in ProtoActor works like this: you generate grains from a Protobuf Servic
 **Actor Spawning**: creation of a LocalContext and a LocalProcess (with a new Mailbox) that is registered in the ProcessRegistry to get a unique PID. A first SystemMessage (Started) is sent to the Actor.
 
 **Message:** http://proto.actor/docs/messages
+
+one thing to consider: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone).
 
 **SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
 **UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
@@ -243,9 +246,10 @@ Google's **Protobuffers** is used for encoding and decoding messages. You descri
 **gRPC** is a Remote Procedure Call framework using Protobuffers that provides a plugin for the Protobuffer compiler to generate the server and client code for Protoactor to create "Grain" Actors.
 
 ## **general things to know**
-Proto.Actor is non bocking via  Async on C# and Coroutines in Kotlin
-rotoactor is a library for implementing actor-based systems. it uses gRPC as a transport to handle communication between actors over the network. if you need actors talking over the network, protoactor (with remote) is a possible solution.
-one thing to consider: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone). 
+Proto.Actor is non-bocking via Async in C# and Coroutines in Kotlin (why not use Coroutines in c# e.g. via this https://github.com/cschladetsch/Flow)
+
+Protoactor is a library for implementing actor-based systems. it uses gRPC as a transport to handle communication between actors over the network. if you need actors talking over the network, protoactor (with remote) is a possible solution.
+
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------
