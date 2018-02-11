@@ -152,9 +152,84 @@ ProtoActor dont support remote supervision, when you spawn remote actors they ar
 
 Spawning is done by a special system actor called Activator. It's one of those hidden things that appear here and there in the API but isn't very explicit.
 
+# Quick intro to working with .proto files
+ProtoActor uses Google's Protobuffer which is a serialisation solution that uses code-generation. One has to define the messages in a .proto file and then compile them with a standalone tool.
+
+Below a simple example for a message. ( filename: messages.proto )
+```protobuf
+// format / version header
+syntax = "proto3";
+// namespace comes from the package name unless cssharp_namespace is used
+package messages;
+// it's a bit redundant here but more complex namescpaes possible if desired
+option csharp_namespace = "Messages";
+
+message MessageWithoutData {}
+message MessageWithSingleStringField
+{
+	// the =1 part is the field position
+	string StringData=1;
+}
+```
+
+Then in C#
+```CS
+
+// "Messages." part comes from the declared namespace in protobuf
+// "MessagesReflection" part is based on protobuf file-name (here messages.proto)
+using ExampleProtocol = Messages.MessagesReflection;
+
+// (...)
+	// Register protobuf messages in ProtoActor
+	Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
+
+```
+If you want to reference other Protobuf message types from within a Protobuf file, then simply import them. Example:
+```protobuf
+// header
+syntax = "proto3";
+package messages;
+import "shared.proto";
+option csharp_namespace = "Messages";
+```
+
+For a more typsafe messaging approach ProtoActor, via in it's Grain layer, is using the gRPC extension. Declare an Actor's messaging interface via gRPC services:
+```protobuf
+// (...)
+service Greeter
+{
+	// SayHello method accepts a HelloRequest message and returns a HelloReply message
+	rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+```
+Calling example usage in C# via ProtoActor Grains:
+```cs
+	// (TODO comment)
+	var client = Grains.HelloGrain("GrainName");
+	// calling a method of a ProtoActor Grain
+	var res = client.SayHello(new HelloRequest()).Result;
+```
+
+Grain (gRPC service) implementation example:
+```cs
+public class HelloGrain : IHelloGrain
+{
+	public Task<HelloResponse> SayHello(HelloRequest request)
+	{
+		return Task.FromResult
+		(
+			new HelloResponse
+			{
+				Message = "Hello from typed grain"
+			}
+		);
+	}
+}
+```
+
 ----------------------------------------------------------------
 ----------------------------------------------------------------
-END of revised notes. Below is most likely inaccurate or wrong. Also may contain quotes taked from various places.
+END of revised notes. Below is most likely inaccurate or wrong. Also may contain raw quotes taked from various places.
 ----------------------------------------------------------------
 ----------------------------------------------------------------
 
@@ -164,7 +239,7 @@ Clustering where the name caching / ownership lives
 
 Cluster.get does a remote activation if needed. Duplication possible.
 
-In clustering a remote node would be a "Member" as its a member of the cluster... while in remoting its just a ... what? ... an endpoint? ... a peer?
+In clustering a remote node would be a "Member" as its a member of the cluster. Discovery is handled by the Cluster solution - by default that's Consul. In remoting (think of 'peering') you need managed the discovery of IP addresses and ports of each peer manually.
 
 All nodes in the cluster will register as the same service in consul, where the cluster name is the service name in consul and each of those entries have tags for known kinds
 
