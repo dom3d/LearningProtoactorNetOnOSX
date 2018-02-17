@@ -1,0 +1,6 @@
+syntax = "proto3";
+package messages;
+option csharp_namespace = "Messages";
+
+message DummyMessage {}
+message CustomSenderMessage { string address = 1; string name = 2; }

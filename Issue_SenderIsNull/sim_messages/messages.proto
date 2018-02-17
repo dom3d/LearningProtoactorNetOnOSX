@@ -1,0 +1,11 @@
+syntax = "proto3";
+package messages;
+option csharp_namespace = "Messages";
+import "Proto.Actor/Protos.proto";
+
+message JoinChannelV2 { actor.PID Sender = 1; }
+
+message SimHeartBeat {}
+message JoinChannel {}
+message LeaveChannel {}
+message IntValue { int32 number = 1; }

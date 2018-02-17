@@ -30,6 +30,8 @@ Compiling protobuffer with gRPC: go into the directory with your message definit
 
 	protoc *.proto -I=./ --csharp_out=. --csharp_opt=file_extension=.g.cs --grpc_out . --plugin=protoc-gen-grpc=/usr/local/bin/grpc_csharp_plugin
 
+Be aware that you may want to references other proto files and add different directories for imports. In that situation add them via additional -I {path}
+
 DotNetCore console app is not an exe like when using Mono but a DLL. Run it like this
 
 	dotnet MyAppName.dll
@@ -70,9 +72,9 @@ The main author of ProtoActor ported **Akka** to DotNet. "Akka" for Java/JVM was
 ### Process
 In ProtoActor a Process is defined as something that processes messages. One could think of actors being a specialised form of a Processes. One can send User Messages as well as System Messages to a Process. Messages are handled via the Mailbox of a Process.
 
-It's a very blurry line between Actor and Process in ProtoActor and that's reflected by various places using both names in an exchangable way. But technically the Process is actually only the thing that you can send messages to. It's the target of a message.
+It's a very blurry line between Actor and Process in ProtoActor and that's reflected by various places using both names in an exchangable way. But technically the Process is actually only the thing that you can send messages to. It's the target of a message. Maybe "Target" would actually have been a better name.
 
-Maybe "Target" would actually have been a better name.
+There are LocalProcesses, RemoteProcesses and a RouterProcess. RemoteProcesses represent a Process (Actor) in a different ProtoActor instance. See Remote and Cluster for more details. A RouterProcess handles message forwarding in special way, depending of the router type.
 
 ### Mailbox
 The Mailbox is the thing that stores messages that a Process received. It actually also covers the triggering of reactive processing as Tasks across Threads.
@@ -93,6 +95,7 @@ Recommended to read:
 - http://proto.actor/docs/actors
 - https://github.com/AsynkronIT/protoactor-go/blob/dev/actor/doc.go
 - https://www.infoq.com/br/presentations/failing-gracefully-with-the-actor-model
+- https://github.com/rogeralsing/Presentations/tree/master/FailingGracefully/QConSP
 
 ## PID
 ID to identify a process (actor) but could also hold a reference if the process (actor) is local. Spawning creates the ID.
@@ -106,29 +109,30 @@ When an Actor is spawn by another Actor, the given ID is the hierachical path li
 
 PID is somewhat "polluted" with some conviences methods such as: Tell, Request, SendSystemMessage, Stop. Eventually the use the ProcessRegistry to get a reference to the Process instance itself.
 
-An ID has to be unique across the system and across a cluster.
+An ID has to be unique across the system and across a manual remoting setup or a cluster.
 
 ## ProcessRegistry
 Provides IDs for new Process/Actor instances. If a name is not given for a new actor, then the ProcessRegistry will create one based on "$" + internal counter.
 
 ### Context
-Context is passed to an Actor and contains contextual information and provides an API to interact with that data (such as actor children). While processing a message in an actor, you can access the following via the Context object:
+Context is passed to an Actor and contains contextual information and provides an API to interact with it's setup data (such as actor children and it's messaging middleware etc.). While processing a message in an actor, you can access the following via the Context object:
 
 - the actor's PID via context.Self
 - the actor's parent PID via context.Parent
-- message sender's PID: context.Sender. WARNING can be NULL !!! (In fact it's null all the time in my experiments and i don't know why)
+- ability to send messages. Doing this via the context makes message go through the configure middleware
+- request message sender's PID: context.Sender. WARNING can be NULL !!! Only send when reply expect thus only when Request is used. Should be named: RequestSender
 - methods to spawn actors as children
 - stash pending messages e.g. for recovery purposes
 etc.
 
 ## Props
-The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
+Props is the recipe of how to configure a specific Actor when it gets spawned. The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
 
-For ProtoActor, think of Props being a "Recipe/Configuration" for the creation of an Actor, sometimes it's also referred to as "kind". You register a Kind by handing over a Prop and a name.
+For ProtoActor, think of Props being a "Recipe/Configuration/Template/Setup" for the creation of an Actor, sometimes it's also referred to as "kind". You register a Kind by handing over a Prop and a name.
 
-(Actor)Producer: creates a new Actor. MailboxProducer creates a new mailbox. Message routing middleware configuration, Supervision Strategy. A cluster is patitioned automatically by 'kind' using a PartitionActor.
+Props define who to create the actor, what kind of messaging middleware to use (think of wrapping callbacks for messages an Actor receives or sends), the supervision strategy, and even what kind of mailbox to use.
 
-Actors combined with a setup are referred to as "kind".
+ A cluster is patitioned automatically by 'kind' using a PartitionActor.
 
 ## Remote
 Remote is the layer that allows to connect ProtoActor instances with each other. Each instance becomes a node with an Endpoint; a server with an adresss.
@@ -192,6 +196,23 @@ package messages;
 import "shared.proto";
 option csharp_namespace = "Messages";
 ```
+
+
+If you want to reference ProtoActor data types (e.g. PID) or message types, you can import them from GitHub like this
+```protobuf
+syntax = "proto3";
+package messages;
+
+// imports
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/actor.proto";
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/remoting.proto";
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/cluster.proto";
+
+// namespace
+option csharp_namespace = "Messages";
+```
+
+Documentation for Proto3 is here: https://developers.google.com/protocol-buffers/docs/proto3
 
 For a more typsafe messaging approach ProtoActor, via in it's Grain layer, is using the gRPC extension. Declare an Actor's messaging interface via gRPC services:
 ```protobuf
@@ -273,7 +294,7 @@ one thing to consider: while protoactor uses queues internally to route messages
 
 **SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
 **UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
-**MessageEnvelope:** holds references to the message, the sender and the message header
+**MessageEnvelope:** hThis is used for Request-Reply based messaging. It holds references to the message, the sender and the message header
 **MessageHeader:** String-based Key-Value store with meta data for the message. Confusion trap due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
 **DeadLetter:** http://proto.actor/docs/durability
 **Dispatcher:** ?
@@ -284,6 +305,10 @@ The EventStream is used internally in Proto.Actor to broadcast framework events.
 http://proto.actor/docs/golang/eventstream#usages
 eventstream is somewhat of a infrastructure utility, you can absolutely use it, we use it internally in ProtoActor, e.g. Remote and Cluster makes use of it to distribute events in a pub sub way.
 But do note that it is only in process. it is not a full fledged cluster pub sub
+
+Eventstream is pretty much just a pubsub direct invocation thing
+anything passed to the eventstream will directly find its subscribers and synchronously call the subscribers
+those subscribers can ofc be lambdas that do Tell to some actor to make it async
 
 **ActorClient / RootContext:** ?
 **ContextState:** None, Alive, Restarting, Stopping
@@ -365,6 +390,11 @@ ctx.Spawn(routing.FromGroupRouter(routing.NewBroadcastGroup(pids...)))
 
 Actor self-destructoin: context.Self().Stop() also works
 Actor destruction: pid.Stop()
+
+
+Middleware example: adding debug infos into the messaging flow of an actor:
+https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloProto/SupervisorActor.cs
+
 
 -------
 # Alias in your head
