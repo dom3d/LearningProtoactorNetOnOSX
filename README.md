@@ -40,6 +40,98 @@ Consul.io is used for the automatic Clustering aspect of ProtoActor. Get it up a
 
 	consul agent -dev -advertise 127.0.0.1
 
+# Quick intro to working with .proto files
+ProtoActor uses Google's Protobuffer which is a serialisation solution that uses code-generation. One has to define the messages in a .proto file and then compile them with a standalone tool.
+
+Below a simple example for a message. ( filename: messages.proto )
+```protobuf
+// format / version header
+syntax = "proto3";
+// namespace comes from the package name unless cssharp_namespace is used
+package messages;
+// it's a bit redundant here but more complex namescpaes possible if desired
+option csharp_namespace = "Messages";
+
+message MessageWithoutData {}
+message MessageWithSingleStringField
+{
+	// the =1 part is the field position
+	string StringData=1;
+}
+```
+
+Then in C#
+```CS
+
+// "Messages." part comes from the declared namespace in protobuf
+// "MessagesReflection" part is based on protobuf file-name (here messages.proto)
+using ExampleProtocol = Messages.MessagesReflection;
+
+// (...)
+	// Register protobuf messages in ProtoActor
+	Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
+
+```
+If you want to reference other Protobuf message types from within a Protobuf file, then simply import them. Example:
+```protobuf
+// header
+syntax = "proto3";
+package messages;
+import "shared.proto";
+option csharp_namespace = "Messages";
+```
+
+
+If you want to reference ProtoActor data types (e.g. PID) or message types, you can import them from GitHub like this
+```protobuf
+syntax = "proto3";
+package messages;
+
+// imports
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/actor.proto";
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/remoting.proto";
+import "github.com/AsynkronIT/protoactor-contracts/blob/master/cluster.proto";
+
+// namespace
+option csharp_namespace = "Messages";
+```
+
+Documentation for Proto3 is here: https://developers.google.com/protocol-buffers/docs/proto3
+
+Grains, the typsafe request-response messaging approach in ProtoActor is using code-gen via a custom gRPC extension. Declare an Grain's (Virtual Actor)'s RPC interface via gRPC services like this:
+```protobuf
+// (...)
+service HelloGrain
+{
+	// SayHello method accepts a HelloRequest message and returns a HelloReply message
+	rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+```
+Calling example usage in C# via ProtoActor Grains:
+```cs
+	// (TODO comment)
+	var client = Grains.HelloGrain("GrainName");
+	// calling a method of a ProtoActor Grain
+	var res = client.SayHello(new HelloRequest()).Result;
+```
+
+Grain (gRPC service) implementation example:
+```cs
+public class HelloGrain : IHelloGrain
+{
+	public Task<HelloResponse> SayHello(HelloRequest request)
+	{
+		return Task.FromResult
+		(
+			new HelloResponse
+			{
+				Message = "Hello from typed grain"
+			}
+		);
+	}
+}
+```
+
 # Understanding the API Layers
 ProtoActor is build in stages. More recent layers sit somewhat ontop of the previous one but with blurry intersections.
 
@@ -168,98 +260,6 @@ ProtoActor dont support remote supervision, when you spawn remote actors they ar
 
 Spawning is done by a special system actor called Activator. It's one of those hidden things that appear here and there in the API but isn't very explicit.
 
-# Quick intro to working with .proto files
-ProtoActor uses Google's Protobuffer which is a serialisation solution that uses code-generation. One has to define the messages in a .proto file and then compile them with a standalone tool.
-
-Below a simple example for a message. ( filename: messages.proto )
-```protobuf
-// format / version header
-syntax = "proto3";
-// namespace comes from the package name unless cssharp_namespace is used
-package messages;
-// it's a bit redundant here but more complex namescpaes possible if desired
-option csharp_namespace = "Messages";
-
-message MessageWithoutData {}
-message MessageWithSingleStringField
-{
-	// the =1 part is the field position
-	string StringData=1;
-}
-```
-
-Then in C#
-```CS
-
-// "Messages." part comes from the declared namespace in protobuf
-// "MessagesReflection" part is based on protobuf file-name (here messages.proto)
-using ExampleProtocol = Messages.MessagesReflection;
-
-// (...)
-	// Register protobuf messages in ProtoActor
-	Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
-
-```
-If you want to reference other Protobuf message types from within a Protobuf file, then simply import them. Example:
-```protobuf
-// header
-syntax = "proto3";
-package messages;
-import "shared.proto";
-option csharp_namespace = "Messages";
-```
-
-
-If you want to reference ProtoActor data types (e.g. PID) or message types, you can import them from GitHub like this
-```protobuf
-syntax = "proto3";
-package messages;
-
-// imports
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/actor.proto";
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/remoting.proto";
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/cluster.proto";
-
-// namespace
-option csharp_namespace = "Messages";
-```
-
-Documentation for Proto3 is here: https://developers.google.com/protocol-buffers/docs/proto3
-
-For a more typsafe messaging approach ProtoActor, via in it's Grain layer, is using the gRPC extension. Declare an Actor's messaging interface via gRPC services:
-```protobuf
-// (...)
-service Greeter
-{
-	// SayHello method accepts a HelloRequest message and returns a HelloReply message
-	rpc SayHello (HelloRequest) returns (HelloReply) {}
-}
-```
-Calling example usage in C# via ProtoActor Grains:
-```cs
-	// (TODO comment)
-	var client = Grains.HelloGrain("GrainName");
-	// calling a method of a ProtoActor Grain
-	var res = client.SayHello(new HelloRequest()).Result;
-```
-
-Grain (gRPC service) implementation example:
-```cs
-public class HelloGrain : IHelloGrain
-{
-	public Task<HelloResponse> SayHello(HelloRequest request)
-	{
-		return Task.FromResult
-		(
-			new HelloResponse
-			{
-				Message = "Hello from typed grain"
-			}
-		);
-	}
-}
-```
-
 ## Cluster
 'Cluster' is a more automatic way to do Remoting / Peering. The Cluster layer takes care of connecting ProtocActor instances over the network - this way you no longer need to maintain ip addresses and ports of Remote-instances / remote-nodes manually. The Cluster handles the discovery.
 
@@ -290,6 +290,8 @@ Virtual actor means, you don't know exactly where in the cluster the ActorGrain 
 Grains register themselves as Kind in the Remote layer.
 
 The RPC layer send the method name as string, increase the message size and amount of generated garbage.
+
+All grains are accessible via the Gain namespace.
 
 
 http://proto.actor/docs/what%20is%20protoactor   
