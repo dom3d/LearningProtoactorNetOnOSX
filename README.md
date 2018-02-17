@@ -74,7 +74,7 @@ In ProtoActor a Process is defined as something that processes messages. One cou
 
 It's a very blurry line between Actor and Process in ProtoActor and that's reflected by various places using both names in an exchangable way. But technically the Process is actually only the thing that you can send messages to. It's the target of a message. Maybe "Target" would actually have been a better name.
 
-There are LocalProcesses, RemoteProcesses and a RouterProcess. RemoteProcesses represent a Process (Actor) in a different ProtoActor instance. See Remote and Cluster for more details. A RouterProcess handles message forwarding in special way, depending of the router type.
+There are LocalProcesses, RemoteProcesses, GuardianProcesses, FutureProcess and a RouterProcess. RemoteProcesses represent a Process (Actor) in a different ProtoActor instance. See Remote and Cluster for more details. A RouterProcess handles message forwarding in special way, depending of the router type.
 
 ### Mailbox
 The Mailbox is the thing that stores messages that a Process received. It actually also covers the triggering of reactive processing as Tasks across Threads.
@@ -103,9 +103,11 @@ ID to identify a process (actor) but could also hold a reference if the process 
 	PID("127.0.0.1:8000", "actor_name");
 
 It's composed by the IP:Port and the actor (proces) instance name.
-When an Actor is spawn by another Actor, the given ID is the hierachical path like th following:
+When an Actor is spawn by another Actor, the given ID is the hierachical path like the following:
 
 	{ "Address": "127.0.0.1:12005", "Id": "ParentName/ChildName" }
+
+PID has an API to send message but those messages hit the mailbox directly and ignore any "Props" configuration - saying middlewares are ignore.
 
 PID is somewhat "polluted" with some conviences methods such as: Tell, Request, SendSystemMessage, Stop. Eventually the use the ProcessRegistry to get a reference to the Process instance itself.
 
@@ -115,27 +117,37 @@ An ID has to be unique across the system and across a manual remoting setup or a
 Provides IDs for new Process/Actor instances. If a name is not given for a new actor, then the ProcessRegistry will create one based on "$" + internal counter.
 
 ### Context
-Context is passed to an Actor and contains contextual information and provides an API to interact with it's setup data (such as actor children and it's messaging middleware etc.). While processing a message in an actor, you can access the following via the Context object:
+Context is passed to an Actor's receive method and contains the Actor's setup and message and related APIs, such as:
+
+- received message
+- configuration (middleware etc)
+- hierachy
+
+While processing a message in an actor, you can access the following via the Context object:
 
 - the actor's PID via context.Self
 - the actor's parent PID via context.Parent
 - ability to send messages. Doing this via the context makes message go through the configure middleware
-- request message sender's PID: context.Sender. WARNING can be NULL !!! Only send when reply expect thus only when Request is used. Should be named: RequestSender
-- methods to spawn actors as children
+- sender's PID for request based messages: context.Sender. WARNING can be NULL !!! Only send when reply expect thus only when Request is used. Should be named: RequestSender
+- methods to spawn actors as children (spawn method names of the context are not explicitly saying so unfortnuately.)
 - stash pending messages e.g. for recovery purposes
 etc.
 
 ## Props
-Props is the recipe of how to configure a specific Actor when it gets spawned. The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
+Props is the configurator of an Actor - it holds the recipe of how to configure a specific Actor when the Actor gets spawned.
 
-For ProtoActor, think of Props being a "Recipe/Configuration/Template/Setup" for the creation of an Actor, sometimes it's also referred to as "kind". You register a Kind by handing over a Prop and a name.
+The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
 
-Props define who to create the actor, what kind of messaging middleware to use (think of wrapping callbacks for messages an Actor receives or sends), the supervision strategy, and even what kind of mailbox to use.
+Sometimes Props is also referred to as "kind" in ProtoActor. You register a Kind by handing over a Prop and it's name.
 
- A cluster is patitioned automatically by 'kind' using a PartitionActor.
+Props define what creates the actor, what kind of messaging middleware is to use, what supervision strategy to put in place, and even what kind of mailbox to use.
+
+A cluster is patitioned automatically by 'kind' using a PartitionActor.
+
+Alternative name you can keep in your mind for Props that could be suiteable are: Configurator, Template, Receipe, Setup, Builder, Schema.
 
 ## Remote
-Remote is the layer that allows to connect ProtoActor instances with each other. Each instance becomes a node with an Endpoint; a server with an adresss.
+Remote is the layer that allows to connect ProtoActor instances with each other. Peering ProtoActor instanecs over network basically. Each instance becomes a node with an Endpoint; a server with an adresss.
 
 You can
 
@@ -248,34 +260,39 @@ public class HelloGrain : IHelloGrain
 }
 ```
 
-----------------------------------------------------------------
-----------------------------------------------------------------
-END of revised notes. Below is most likely inaccurate or wrong. Also may contain raw quotes taked from various places.
-----------------------------------------------------------------
-----------------------------------------------------------------
-
 ## Cluster
-'Cluster' is a Remote System Server Node with per Actor-Prop-Kind partition that joins the 3rd party cluster provider.
-Clustering where the name caching / ownership lives
+'Cluster' is a more automatic way to do Remoting / Peering. The Cluster layer takes care of connecting ProtocActor instances over the network - this way you no longer need to maintain ip addresses and ports of Remote-instances / remote-nodes manually. The Cluster handles the discovery.
+
+Cluster uses Remote under the hood, so no need to do a Remote.Start. Just Cluster.Start which basically means your new ProtoActor instance is joining the cluster and becomes a member.
+
+Clusters have a name, so you could run multiple ProtoActor clusters on the same Clustering system without theses "virtual clusters" seeing each other.
 
 Cluster.get does a remote activation if needed. Duplication possible.
 
-In clustering a remote node would be a "Member" as its a member of the cluster. Discovery is handled by the Cluster solution - by default that's Consul. In remoting (think of 'peering') you need managed the discovery of IP addresses and ports of each peer manually.
-
-All nodes in the cluster will register as the same service in consul, where the cluster name is the service name in consul and each of those entries have tags for known kinds
+The default solution to provide cluserting is Consul. In 
+consul the cluster name is the service name and each of those entries have tags for known actor kinds (actor configurators).
 
 Cluster.Start: It starts the cluster module and joins the cluster. It is dependant on Consul so you need to have a consul agent running first. A better name would probably be "Cluster.Join"
 
-Cluster.Shutdown should really be called "Leave" as it informs your app to leave the cluster
-or Deregister
+Cluster.Shutdown should really be called "Leave" as it informs your app to leave the cluster.
 
 ## Grain (Virtual Actor)
-http://proto.actor/docs/what%20is%20protoactor   Automatic placement strategy for Actors in a Cluster based on hash table
-Actors under the hood with a typed protobuf RPC ontop
-Automatic Activation and placement. Grain is a specialised form of Actor.
-The concept of virtual actors only exists in the cluster lib. it's purpose is mainly so that you don't need to know where or if an actor exists, because the node that hosts it could die at any time. So if it disappears it will automatically be recreated
-Virtual Actors/Grains are RPC based
-types grains from protobuf definitions via code-gen.
+Grains are an additional convienience layer that does a lot of things under the automatically. It requires to use ProtoActor Cluster.
+
+- automatic activation
+- automatic placement (based on Props Kind)
+- typed RPCs
+
+Grains are created via a custom Protobuf extension provided by ProtoActor. This extenion does all the "glueing" via code generation. Grains allow to define a "typed" request & response experience via Probotuf RPCs.
+
+Virtual actor means, you don't know exactly where in the cluster the ActorGrain is and if it's was actually spawned or not. When you request a reference (PID) to an actor, it may get spawned as consequence in case there was no instance alive. The cluster is partitioned by Prop type / aka kind.
+
+Grains register themselves as Kind in the Remote layer.
+
+The RPC layer send the method name as string, increase the message size and amount of generated garbage.
+
+
+http://proto.actor/docs/what%20is%20protoactor   
 https://files.gitter.im/AsynkronIT/protoactor/kepm/blob
 https://files.gitter.im/AsynkronIT/protoactor/YqnA/blob
 A grain is a virtual actor, same as MS Orleans.. One can  specify RPC services in the proto files, and generate typed C# code and the Proto.Actor cluster will connect everything automatically. so node1 can ask for a grain of a specific type, and it will be found or created on another node
@@ -283,8 +300,34 @@ If you are using cluster, you can generate "Grains" using the protoc grain gener
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
 
-## Deeper topics, unsorted notes.
+## Flexibility via Props
 
+**Router:** message forwarder or multiplier
+Somebody said: "I'm using round robin, consistent hash and broadcast routers in my chat server"
+
+**Middleware:** message handler or transformator that plugs into the path of a message to it's end destination.
+
+Middleware example: adding debug infos into the messaging flow of an actor:
+https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloProto/SupervisorActor.cs
+
+**Supervision:** Ability of an actor to spawn or despawn other actors and thus restart them on failure or for other scnearios. Directives are: Resume, Restart, Stop, Escalate
+If I restart an actor with the supervision strategy is the PID the same? Yes, same PID, messages should still be in the mailbox and start coming as soon as actor is restarted
+the message that caused the failure will be lost however unless you explicitly stash it
+ proper way to kill a child actor from a parent? PID.Stop();
+ Parent is only available when you spawn via the Context and the primary reason to do that is for supervision. If the child fails, that is escalated to the parent. If you don't plan to use supervision then you can also just embed Self in a message
+
+**Supervision Strategy:** a pattern or recipe for how to handle failure in children. For example restart all children when one child fails. etc.
+**Watcher / Watching:** if an Actors dies that is watched, the Watcher received a notification about the Termination.
+**Parent:** Parents are implicitly watching their children (parent Actors that is).
+**Schedulers:**
+Have an interface in case persitent schedulers are required.
+
+## TBD
+
+http://getakka.net/docs/concepts/actors
+http://proto.actor/docs/actors  :  An actor is a container for State, Behavior, a Mailbox, Children and a Supervisor Strategy.
+
+## Deeper topics, unsorted notes. Under the hood stuff:
 
 **Actor Spawning**: creation of a LocalContext and a LocalProcess (with a new Mailbox) that is registered in the ProcessRegistry to get a unique PID. A first SystemMessage (Started) is sent to the Actor.
 
@@ -294,7 +337,7 @@ one thing to consider: while protoactor uses queues internally to route messages
 
 **SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
 **UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
-**MessageEnvelope:** hThis is used for Request-Reply based messaging. It holds references to the message, the sender and the message header
+**MessageEnvelope:** The meta-data of a message. This is used for Request-Reply based messaging (only?). It holds references to the message, the sender, the target and the message header
 **MessageHeader:** String-based Key-Value store with meta data for the message. Confusion trap due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
 **DeadLetter:** http://proto.actor/docs/durability
 **Dispatcher:** ?
@@ -310,29 +353,11 @@ Eventstream is pretty much just a pubsub direct invocation thing
 anything passed to the eventstream will directly find its subscribers and synchronously call the subscribers
 those subscribers can ofc be lambdas that do Tell to some actor to make it async
 
+http://proto.actor/docs/golang/eventstream#usages
+http://proto.actor/docs/golang/eventstream
+
 **ActorClient / RootContext:** ?
 **ContextState:** None, Alive, Restarting, Stopping
-
-**Router:** message forwarder or multiplier
-I'm using round robin, consistent hash and broadcast routers in my chat server
-
-**Middleware:** message handler or transformator that plugs into the path of a message to it's end destination.
-
-**Supervision:** Ability of an actor to spawn or despawn other actors and thus restart them on failure or for other scnearios. Directives are: Resume, Restart, Stop, Escalate
-If I restart an actor with the supervision strategy is the PID the same? Yes, same PID, messages should still be in the mailbox and start coming as soon as actor is restarted
-the message that caused the failure will be lost however unless you explicitly stash it
- proper way to kill a child actor from a parent? PID.Stop();
- Parent is only available when you spawn via the Context and the primary reason to do that is for supervision. If the child fails, that is escalated to the parent. If you don't plan to use supervision then you can also just embed Self in a message
-
-**Supervision Strategy:** a pattern or recipe for how to handle failure in children. For example restart all children when one child fails. etc.
-**Watcher / Watching:** if an Actors dies that is watched, the Watcher received a notification about the Termination.
-**Parent:** Parents are implicitly watching their children (parent Actors that is).
-**Schedulers:**
-Have an interface in case persitent schedulers are required.
-
-http://getakka.net/docs/concepts/actors
-
-http://proto.actor/docs/actors  :  An actor is a container for State, Behavior, a Mailbox, Children and a Supervisor Strategy.
 
 **system actors**
 Partition Actor  (partion for host). Partion owns actor names and knows the location of the actor?
@@ -382,8 +407,7 @@ those finegrained events are then routed to the relevant partition actors
 
 remotewatch: : This shows how you can watch remote actors and get notified if the node crashes
 
-http://proto.actor/docs/golang/eventstream#usages
-http://proto.actor/docs/golang/eventstream
+
 
 ctx.Spawn(routing.FromGroupRouter(routing.NewBroadcastGroup(pids...)))
 
@@ -391,18 +415,7 @@ ctx.Spawn(routing.FromGroupRouter(routing.NewBroadcastGroup(pids...)))
 Actor self-destructoin: context.Self().Stop() also works
 Actor destruction: pid.Stop()
 
-
-Middleware example: adding debug infos into the messaging flow of an actor:
-https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloProto/SupervisorActor.cs
-
-
 -------
-# Alias in your head
-Cluster.Join
-Cluster.Leave
-
-PID / ProcessRegistry  / Vs Actor:  processregistry has a variable called localActor referencing processes.
-
 # Mechanics
 Spawning : Local, Remote, Cluster, Grain
 
