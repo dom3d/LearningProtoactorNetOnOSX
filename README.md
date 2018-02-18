@@ -317,23 +317,6 @@ If you are using cluster, you can generate "Grains" using the protoc grain gener
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
 
-## The many (and thus confusing) ways to send a message
-**pid.Tell** this posts the message to the maibox directly and ignores any middleware.
-
-**Remote.SendMessage**  wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
-
-**context.tell**  This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
-
-**context.RequestAsync** Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
-**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used.
-
-**context.respond:** this is only for received Request messages (RPCs).
-
-## The many (and thus confusing) ways to send spawn an actor
-**Actor.Spawn** (and it's variations) spawns it as root Actor
-**context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
-
-
 ## Flexibility via Props
 
 **Router:** message forwarder or multiplier
@@ -356,7 +339,26 @@ the message that caused the failure will be lost however unless you explicitly s
 **Schedulers:**
 Have an interface in case persitent schedulers are required.
 
-## TBD
+# Using ProtoActor ...
+
+## The many (and thus confusing) ways to send a message
+**pid.Tell** this posts the message to the maibox directly and ignores any middleware.
+
+**Remote.SendMessage**  wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
+
+**context.tell**  This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
+
+**context.RequestAsync** Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
+**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used.
+
+**context.respond:** this is only for received Request messages (RPCs).
+
+## The many (and thus confusing) ways to send spawn an actor
+**Actor.Spawn** (and it's variations) spawns it as root Actor
+**context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
+
+
+# TBD
 
 http://getakka.net/docs/concepts/actors
 http://proto.actor/docs/actors  :  An actor is a container for State, Behavior, a Mailbox, Children and a Supervisor Strategy.
