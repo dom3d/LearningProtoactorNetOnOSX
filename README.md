@@ -30,7 +30,23 @@ Compiling protobuffer with gRPC: go into the directory with your message definit
 
 	protoc *.proto -I=./ --csharp_out=. --csharp_opt=file_extension=.g.cs --grpc_out . --plugin=protoc-gen-grpc=/usr/local/bin/grpc_csharp_plugin
 
-Be aware that you may want to references other proto files and add different directories for imports. In that situation add them via additional -I {path}
+Be aware that you may want to references other proto files and add different directories for imports. In that situation add them via additional -I {path}. This can be a bit tricky. My recommendation (how I got it working) is to make e.g. 3rd protos that you want to import reside in a subfolder of your own protos.
+
+```
+- folder with your protos
+--  subfolder with the protos you want to import
+```
+
+Example setup where library protos are in a subfolder:
+```
+#!/bin/bash
+protoc ./messages/*.proto -I=./messages/ --csharp_out=./messages/ --csharp_opt=file_extension=.g.cs --grpc_out . --plugin=protoc-gen-grpc=/usr/local/bin/grpc_csharp_plugin
+```
+
+Import would then like this
+```
+import "lib/Proto.Actor/protos.proto";
+```
 
 DotNetCore console app is not an exe like when using Mono but a DLL. Run it like this
 
@@ -72,31 +88,30 @@ using ExampleProtocol = Messages.MessagesReflection;
 	Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
 
 ```
-If you want to reference other Protobuf message types from within a Protobuf file, then simply import them. Example:
+If you want to reference other Protobuf message types from within a Protobuf file, use imports. Example:
 ```protobuf
 // header
 syntax = "proto3";
 package messages;
-import "shared.proto";
+import "shared/shared.proto";
 option csharp_namespace = "Messages";
 ```
 
-
-If you want to reference ProtoActor data types (e.g. PID) or message types, you can import them from GitHub like this
+If you want to reference ProtoActor data types (e.g. PID) or message types, download the 3rd party folders and put them into a subfolder. Example:
 ```protobuf
 syntax = "proto3";
 package messages;
-
-// imports
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/actor.proto";
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/remoting.proto";
-import "github.com/AsynkronIT/protoactor-contracts/blob/master/cluster.proto";
-
-// namespace
 option csharp_namespace = "Messages";
+// import
+import "lib/Proto.Actor/protos.proto";
+// using the imported type via it's namespace
+message JoinChannel { actor.PID sender = 1; }
 ```
 
 Documentation for Proto3 is here: https://developers.google.com/protocol-buffers/docs/proto3
+
+Well known datatypes:
+https://github.com/google/protobuf/blob/master/src/google/protobuf/unittest_well_known_types.proto
 
 Grains, the typsafe request-response messaging approach in ProtoActor is using code-gen via a custom gRPC extension. Declare an Grain's (Virtual Actor)'s RPC interface via gRPC services like this:
 ```protobuf
@@ -301,6 +316,23 @@ A grain is a virtual actor, same as MS Orleans.. One can  specify RPC services i
 If you are using cluster, you can generate "Grains" using the protoc grain generator.. those are typed actors with an RPC like interface (much like Microsoft Orleans)
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
+
+## The many (and thus confusing) ways to send a message
+**pid.Tell** this posts the message to the maibox directly and ignores any middleware.
+
+**Remote.SendMessage**  wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
+
+**context.tell**  This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
+
+**context.RequestAsync** Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
+**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used.
+
+**context.respond:** this is only for received Request messages (RPCs).
+
+## The many (and thus confusing) ways to send spawn an actor
+**Actor.Spawn** (and it's variations) spawns it as root Actor
+**context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
+
 
 ## Flexibility via Props
 

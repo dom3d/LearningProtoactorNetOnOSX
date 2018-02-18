@@ -27,23 +27,17 @@ sealed class IntChannel : IActor
 				break;
 
 			case Messages.JoinChannel join:
-				System.Console.WriteLine("Hola, join message received");
-				if (sender != null)
+				// context sender is empty as it's not a request/reply message but just a simple send mesage
+				PID subscriber = join.Sender;
+				if (!_subscribers.Contains(subscriber))
 				{
-					System.Console.WriteLine("Got join message from " + sender.ToString());
-					if (!_subscribers.Contains(sender))
-					{
-						_subscribers.Add(sender);
-						System.Console.WriteLine("Added subscriber with PID: " + sender.ToString());
-					}
-				}
-				else
-				{
-					System.Console.WriteLine("Sender is actually null, so i can't add him :|");
+					_subscribers.Add(sender);
+					System.Console.WriteLine("Added subscriber with PID: " + sender.ToString());
 				}
 				break;
 
 			case Messages.LeaveChannel leave:
+				// context sender is empty as it's not a request/reply message but just a simple send mesage
 				_subscribers.Remove(sender);
 				break;
 

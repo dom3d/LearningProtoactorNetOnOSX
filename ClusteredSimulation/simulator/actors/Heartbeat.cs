@@ -21,6 +21,7 @@ sealed class Heartbeat : IActor
 		{
 			case Started _:
 				System.Console.WriteLine("Hearbeat started, my PID: " + context.Self.ToString());
+				// spawns with context, does spawn it as child
 				_channel = context.SpawnNamed(Actor.FromProducer(() => new IntChannel()), IntChannel.MainChannelName);
 				Messages.IntValue msg = new Messages.IntValue() { Number = 1 };
 				this._scheduler.ScheduleTellRepeatedly(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(250), _channel, msg, out _cancelScheduler);

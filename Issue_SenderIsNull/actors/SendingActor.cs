@@ -9,23 +9,34 @@ namespace Issue_SenderIsNull.Actors
 		public Task ReceiveAsync(IContext ctx)
 		{
 			var receivedMsg = ctx.Message;
-			if (receivedMsg is Messages.TriggerSendEmptyMsgTo destinationData)
+			Console.WriteLine("Sender got message");
+			try
 			{
-				PID target = new PID(destinationData.TargetPID.Address, destinationData.TargetPID.Id);
-				Console.WriteLine($"Sending Message to {target.ToString()}");
-				target.Tell(new Messages.EmptyMessage());
+				if (receivedMsg is Messages.TriggerSendEmptyMsgTo destinationData)
+				{
+					Console.WriteLine("Asked to send empty to destination ...");
+					PID target = new PID(destinationData.TargetPID.Address, destinationData.TargetPID.Id);
+					Console.WriteLine($"Sending Message to {target.ToString()}");
+					target.Tell(new Messages.EmptyMessage());
 
+				}
+				else if (receivedMsg is Messages.TriggerSendMsgWithPIDTo targetData)
+				{
+
+					PID target = new PID(targetData.TargetPID.Address, targetData.TargetPID.Id);
+					Console.WriteLine($"Sending Message incl. sender PID to {target.ToString()}");
+					var pidInfoMsg = new Messages.PidInfo() { Address = ctx.Self.Address, Id = ctx.Self.Id };
+					var messageToSend = new Messages.MessageWithPID() { SenderPID = pidInfoMsg };
+					target.Tell(messageToSend);
+					Console.WriteLine((".. sent msg."));
+
+				}
 			}
-			else if (receivedMsg is Messages.TriggerSendMsgWithPIDTo targetData)
+			catch(Exception e)
 			{
-				
-				PID target = new PID(targetData.TargetPID.Address, targetData.TargetPID.Id);
-				Console.WriteLine($"Sending Message incl. sender PID to {target.ToString()}");
-				var pidInfoMsg = new Messages.PidInfo() { Address = ctx.Self.Address, Id = ctx.Self.Id};
-				var messageToSend = new Messages.MessageWithPID() { SenderPID = pidInfoMsg };
-				target.Tell( messageToSend );
-
+				Console.WriteLine($"Exception: {e.ToString()}");
 			}
+
 			return Actor.Done;
 		}
 	}

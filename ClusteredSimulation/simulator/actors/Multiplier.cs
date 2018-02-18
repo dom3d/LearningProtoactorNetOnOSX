@@ -30,7 +30,7 @@ sealed class Multiplier : IActor
 
 				PID channel = new PID("127.0.0.1:12005", "HeartBeat/IntChannel");
 				System.Console.WriteLine("Targeting PID: " + channel.ToString());
-				Remote.SendMessage(channel, new Messages.JoinChannel(), Serialization.DefaultSerializerId);
+				Remote.SendMessage(channel, new Messages.JoinChannel() { Sender = context.Self }, Serialization.DefaultSerializerId);
 
 				//channel.Tell(new Messages.JoinChannel());
 				System.Console.WriteLine("Sent join message");

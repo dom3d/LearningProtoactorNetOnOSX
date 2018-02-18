@@ -22,15 +22,17 @@ namespace Messages {
     static MessagesReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Cg5tZXNzYWdlcy5wcm90bxIIbWVzc2FnZXMiDgoMU2ltSGVhcnRCZWF0Ig0K",
-            "C0pvaW5DaGFubmVsIg4KDExlYXZlQ2hhbm5lbCIaCghJbnRWYWx1ZRIOCgZu",
-            "dW1iZXIYASABKAVCC6oCCE1lc3NhZ2VzYgZwcm90bzM="));
+            "Cg5tZXNzYWdlcy5wcm90bxIIbWVzc2FnZXMaHGxpYi9Qcm90by5BY3Rvci9w",
+            "cm90b3MucHJvdG8iDgoMU2ltSGVhcnRCZWF0IikKC0pvaW5DaGFubmVsEhoK",
+            "BnNlbmRlchgBIAEoCzIKLmFjdG9yLlBJRCIqCgxMZWF2ZUNoYW5uZWwSGgoG",
+            "c2VuZGVyGAEgASgLMgouYWN0b3IuUElEIhoKCEludFZhbHVlEg4KBm51bWJl",
+            "chgBIAEoBUILqgIITWVzc2FnZXNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { },
+          new pbr::FileDescriptor[] { global::Proto.ProtosReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.SimHeartBeat), global::Messages.SimHeartBeat.Parser, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.JoinChannel), global::Messages.JoinChannel.Parser, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.LeaveChannel), global::Messages.LeaveChannel.Parser, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.JoinChannel), global::Messages.JoinChannel.Parser, new[]{ "Sender" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.LeaveChannel), global::Messages.LeaveChannel.Parser, new[]{ "Sender" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.IntValue), global::Messages.IntValue.Parser, new[]{ "Number" }, null, null, null)
           }));
     }
@@ -151,11 +153,23 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public JoinChannel(JoinChannel other) : this() {
+      Sender = other.sender_ != null ? other.Sender.Clone() : null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public JoinChannel Clone() {
       return new JoinChannel(this);
+    }
+
+    /// <summary>Field number for the "sender" field.</summary>
+    public const int SenderFieldNumber = 1;
+    private global::Proto.PID sender_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Proto.PID Sender {
+      get { return sender_; }
+      set {
+        sender_ = value;
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -171,12 +185,14 @@ namespace Messages {
       if (ReferenceEquals(other, this)) {
         return true;
       }
+      if (!object.Equals(Sender, other.Sender)) return false;
       return true;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
+      if (sender_ != null) hash ^= Sender.GetHashCode();
       return hash;
     }
 
@@ -187,11 +203,18 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+      if (sender_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Sender);
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
+      if (sender_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Sender);
+      }
       return size;
     }
 
@@ -199,6 +222,12 @@ namespace Messages {
     public void MergeFrom(JoinChannel other) {
       if (other == null) {
         return;
+      }
+      if (other.sender_ != null) {
+        if (sender_ == null) {
+          sender_ = new global::Proto.PID();
+        }
+        Sender.MergeFrom(other.Sender);
       }
     }
 
@@ -210,6 +239,13 @@ namespace Messages {
           default:
             input.SkipLastField();
             break;
+          case 10: {
+            if (sender_ == null) {
+              sender_ = new global::Proto.PID();
+            }
+            input.ReadMessage(sender_);
+            break;
+          }
         }
       }
     }
@@ -240,11 +276,23 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public LeaveChannel(LeaveChannel other) : this() {
+      Sender = other.sender_ != null ? other.Sender.Clone() : null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public LeaveChannel Clone() {
       return new LeaveChannel(this);
+    }
+
+    /// <summary>Field number for the "sender" field.</summary>
+    public const int SenderFieldNumber = 1;
+    private global::Proto.PID sender_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Proto.PID Sender {
+      get { return sender_; }
+      set {
+        sender_ = value;
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -260,12 +308,14 @@ namespace Messages {
       if (ReferenceEquals(other, this)) {
         return true;
       }
+      if (!object.Equals(Sender, other.Sender)) return false;
       return true;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
+      if (sender_ != null) hash ^= Sender.GetHashCode();
       return hash;
     }
 
@@ -276,11 +326,18 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+      if (sender_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Sender);
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
+      if (sender_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Sender);
+      }
       return size;
     }
 
@@ -288,6 +345,12 @@ namespace Messages {
     public void MergeFrom(LeaveChannel other) {
       if (other == null) {
         return;
+      }
+      if (other.sender_ != null) {
+        if (sender_ == null) {
+          sender_ = new global::Proto.PID();
+        }
+        Sender.MergeFrom(other.Sender);
       }
     }
 
@@ -299,6 +362,13 @@ namespace Messages {
           default:
             input.SkipLastField();
             break;
+          case 10: {
+            if (sender_ == null) {
+              sender_ = new global::Proto.PID();
+            }
+            input.ReadMessage(sender_);
+            break;
+          }
         }
       }
     }

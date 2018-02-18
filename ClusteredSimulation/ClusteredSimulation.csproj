@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="simulator\" />
-    <Folder Include="simulator\sim_messages\" />
+    <Folder Include="simulator\messages\" />
     <Folder Include="simulator\actors\" />
   </ItemGroup>
 </Project>

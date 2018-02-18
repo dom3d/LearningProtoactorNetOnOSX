@@ -2,5 +2,11 @@ syntax = "proto3";
 package messages;
 option csharp_namespace = "Messages";
 
-message DummyMessage {}
-message CustomSenderMessage { string address = 1; string name = 2; }
+message PidInfo { string address = 1; string id = 2; }
+
+message EmptyMessage {}
+message MessageWithPID { PidInfo senderPID = 1; }
+
+message TriggerSendEmptyMsgTo { PidInfo targetPID = 1; }
+message TriggerSendMsgWithPIDTo { PidInfo targetPID = 1; }
+
