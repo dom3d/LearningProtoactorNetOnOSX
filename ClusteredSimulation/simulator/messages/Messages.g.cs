@@ -23,14 +23,16 @@ namespace Messages {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Cg5tZXNzYWdlcy5wcm90bxIIbWVzc2FnZXMaHGxpYi9Qcm90by5BY3Rvci9w",
-            "cm90b3MucHJvdG8iDgoMU2ltSGVhcnRCZWF0IikKC0pvaW5DaGFubmVsEhoK",
-            "BnNlbmRlchgBIAEoCzIKLmFjdG9yLlBJRCIqCgxMZWF2ZUNoYW5uZWwSGgoG",
-            "c2VuZGVyGAEgASgLMgouYWN0b3IuUElEIhoKCEludFZhbHVlEg4KBm51bWJl",
-            "chgBIAEoBUILqgIITWVzc2FnZXNiBnByb3RvMw=="));
+            "cm90b3MucHJvdG8iDgoMU2ltSGVhcnRCZWF0IicKCVRhcmdldFBJRBIaCgZ0",
+            "YXJnZXQYASABKAsyCi5hY3Rvci5QSUQiKQoLSm9pbkNoYW5uZWwSGgoGc2Vu",
+            "ZGVyGAEgASgLMgouYWN0b3IuUElEIioKDExlYXZlQ2hhbm5lbBIaCgZzZW5k",
+            "ZXIYASABKAsyCi5hY3Rvci5QSUQiGgoISW50VmFsdWUSDgoGbnVtYmVyGAEg",
+            "ASgFQguqAghNZXNzYWdlc2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Proto.ProtosReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.SimHeartBeat), global::Messages.SimHeartBeat.Parser, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Messages.TargetPID), global::Messages.TargetPID.Parser, new[]{ "Target" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.JoinChannel), global::Messages.JoinChannel.Parser, new[]{ "Sender" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.LeaveChannel), global::Messages.LeaveChannel.Parser, new[]{ "Sender" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Messages.IntValue), global::Messages.IntValue.Parser, new[]{ "Number" }, null, null, null)
@@ -129,6 +131,129 @@ namespace Messages {
 
   }
 
+  public sealed partial class TargetPID : pb::IMessage<TargetPID> {
+    private static readonly pb::MessageParser<TargetPID> _parser = new pb::MessageParser<TargetPID>(() => new TargetPID());
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<TargetPID> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public TargetPID() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public TargetPID(TargetPID other) : this() {
+      Target = other.target_ != null ? other.Target.Clone() : null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public TargetPID Clone() {
+      return new TargetPID(this);
+    }
+
+    /// <summary>Field number for the "target" field.</summary>
+    public const int TargetFieldNumber = 1;
+    private global::Proto.PID target_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Proto.PID Target {
+      get { return target_; }
+      set {
+        target_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as TargetPID);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(TargetPID other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Target, other.Target)) return false;
+      return true;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (target_ != null) hash ^= Target.GetHashCode();
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (target_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Target);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (target_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Target);
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(TargetPID other) {
+      if (other == null) {
+        return;
+      }
+      if (other.target_ != null) {
+        if (target_ == null) {
+          target_ = new global::Proto.PID();
+        }
+        Target.MergeFrom(other.Target);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            input.SkipLastField();
+            break;
+          case 10: {
+            if (target_ == null) {
+              target_ = new global::Proto.PID();
+            }
+            input.ReadMessage(target_);
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
   public sealed partial class JoinChannel : pb::IMessage<JoinChannel> {
     private static readonly pb::MessageParser<JoinChannel> _parser = new pb::MessageParser<JoinChannel>(() => new JoinChannel());
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -136,7 +261,7 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -259,7 +384,7 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -382,7 +507,7 @@ namespace Messages {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Messages.MessagesReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

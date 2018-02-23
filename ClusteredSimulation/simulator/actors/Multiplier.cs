@@ -7,7 +7,7 @@ using Proto.Remote;
 sealed class Multiplier : IActor
 {
 	public static readonly string TypeName = MethodBase.GetCurrentMethod().DeclaringType.Name;
-	private int _total = 0;
+	private int _total = 1;
 
 	Task IActor.ReceiveAsync(IContext context)
 	{
@@ -16,31 +16,18 @@ sealed class Multiplier : IActor
 		{
 			case Started _:
 				System.Console.WriteLine("Multiplier started, my PID: " + context.Self.ToString());
-				/*
-				System.Console.WriteLine("Multiplier started, my PID: " + context.Self.ToString());
-				(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
-				while (taskResult.Item2 == ResponseStatusCode.Unavailable)
-				{
-					System.Console.Write(".");
-					taskResult = Cluster.GetAsync("HeartBeat/IntChannel", IntChannel.TypeName).Result;
-				}
-				System.Console.WriteLine("Got int-channel reference");
-				taskResult.Item1.Tell(new Messages.JoinChannel());
-				*/
-
-				PID channel = new PID("127.0.0.1:12005", "HeartBeat/IntChannel");
+				// Here we use a hardcoded address. See Summariser for using the Cluster API to get hold on the PID
+				PID channel = new PID("127.0.0.1:12005", IntChannel.TypeName);
 				System.Console.WriteLine("Targeting PID: " + channel.ToString());
 				Remote.SendMessage(channel, new Messages.JoinChannel() { Sender = context.Self }, Serialization.DefaultSerializerId);
-
-				//channel.Tell(new Messages.JoinChannel());
 				System.Console.WriteLine("Sent join message");
 				break;
 			case Messages.IntValue msg:
 				_total *= msg.Number;
-				System.Console.WriteLine("Got Int heartbeat message");
+				int squared = msg.Number * msg.Number;
+				System.Console.WriteLine($"Got Int heartbeat message. Pump: {msg.Number} Squared: {squared} Total: {_total} ");
 				break;
 		}
-		System.Console.WriteLine(string.Format("Total: {0}", _total));
 		return Actor.Done;
 	}
 }

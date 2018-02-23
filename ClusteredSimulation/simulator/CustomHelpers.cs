@@ -9,17 +9,17 @@ namespace ProtoExtensions
 	// extend props
 	public static class DomsProtoExtensions
 	{
-		public static void RegisterAs(this Props prop, string name)
+		public static Props RegisterAs(this Props prop, string name)
 		{
 			Remote.RegisterKnownKind(name, prop);
+			return prop;
 		}
 	}
 
 	public static class ClusterHelpers
 	{
-		public static (PID, ResponseStatusCode) WaitUntilSpawned(string kindName, string instanceName, TimeSpan retryDuration)
+		public static (PID, ResponseStatusCode) WaitUntilGetSucceeds(string kindName, string instanceName, TimeSpan retryDuration)
 		{
-			System.Console.WriteLine("\n Hepler Cluster Spawn for: " + kindName);
 			bool timedOut = false;
 			Stopwatch timer = new Stopwatch();
 			timer.Start();
@@ -30,10 +30,46 @@ namespace ProtoExtensions
 				timedOut = timer.Elapsed > retryDuration ? true : false;
 			}
 			if(timedOut)
-				System.Console.WriteLine("   Timedout ! -> " + kindName + " spawn duration: " + timer.ElapsedMilliseconds.ToString());
+				System.Console.WriteLine("   Timedout ! -> " + kindName + " Cluster.GetAsync duration: " + timer.ElapsedMilliseconds.ToString());
 			else
-				System.Console.WriteLine("   OK: " + kindName + " spawn duration: " + timer.ElapsedMilliseconds.ToString());
+				System.Console.WriteLine("   OK: " + kindName + " Cluster.GetAsync duration: " + timer.ElapsedMilliseconds.ToString());
 			return taskResult;
 		}
 	}
+
+	// From here on, asuming that Consul Service is running
+	// DeadLetterEvent
+	// MemberStatusEvent
+	// EndpointConnectedEvent
+	// EndpointTerminatedEvent
+	// MemberJoinedEvent
+	// MemberRejoinedEvent
+	// MemberLeftEvent
+	/*
+	Actor.EventStream.Subscribe<ClusterTopologyEvent>(clusterTopologyEvent =>
+	{
+		Console.Out.WriteLine($"++ ClusterTopologyEvent: ");
+		foreach (var status in clusterTopologyEvent.Statuses)
+		{
+			Console.Out.WriteLine($"++++ For {status.Address}");
+			foreach (var kindNme in status.Kinds)
+			{
+				Console.Out.WriteLine($"++++++ Has Kind {kindNme}");
+			}
+		}
+	});
+
+	Actor.EventStream.Subscribe<ClusterTopologyEvent>(clusterTopologyEvent =>
+	{
+		Console.Out.WriteLine($"++ ClusterTopologyEvent: ");
+		foreach (var status in clusterTopologyEvent.Statuses)
+		{
+			Console.Out.WriteLine($"++++ For {status.Address}");
+			foreach (var kindNme in status.Kinds)
+			{
+				Console.Out.WriteLine($"++++++ Has Kind {kindNme}");
+			}
+		}
+	});
+	*/
 }

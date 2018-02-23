@@ -16,6 +16,9 @@ sealed class Summariser : IActor
 		{
 			case Started _:
 				System.Console.WriteLine("Summariser started, my PID: " + context.Self.ToString());
+				var result = Cluster.GetAsync("IntChannel", IntChannel.TypeName).Result;
+				System.Console.WriteLine($">> Tried to get IntChannel PID, got {result.Item2}");
+				// For some reason this takes ages to get hold on, so we wait. Not sure how to do this less with less code
 				(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
 				while (taskResult.Item2 == ResponseStatusCode.Unavailable)
 				{
@@ -23,14 +26,13 @@ sealed class Summariser : IActor
 					taskResult = Cluster.GetAsync("IntChannel", IntChannel.TypeName).Result;
 				}
 				System.Console.WriteLine("Got int-channel reference for: " + taskResult.Item1);
-				taskResult.Item1.Tell(new Messages.JoinChannel());
+				taskResult.Item1.Tell(new Messages.JoinChannel() { Sender = context.Self });
 				break;
 			case Messages.IntValue msg:
 				_summary += msg.Number;
-				System.Console.WriteLine("Got Int message");
+				System.Console.WriteLine($"Got Int message {_summary}");
 				break;
 		}
-		System.Console.WriteLine(string.Format("Sum state: {0}", _summary));
 		return Actor.Done;
 	}
 }

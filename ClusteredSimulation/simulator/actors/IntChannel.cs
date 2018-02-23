@@ -9,10 +9,10 @@ sealed class IntChannel : IActor
 	private List<PID> _subscribers = new List<PID>();
 
 	public static readonly string MainChannelName = "IntChannel";
+	private int _counter = 0;
 
 	public Task ReceiveAsync(IContext context)
 	{
-		PID sender = context.Sender;
 		if(context.Message.GetType() != typeof(Messages.IntValue))
 			System.Console.WriteLine("Actor Hash: " + context.Actor.GetHashCode().ToString() + " got msg: " + context.Message.GetType().ToString());
 		
@@ -31,23 +31,24 @@ sealed class IntChannel : IActor
 				PID subscriber = join.Sender;
 				if (!_subscribers.Contains(subscriber))
 				{
-					_subscribers.Add(sender);
-					System.Console.WriteLine("Added subscriber with PID: " + sender.ToString());
+					_subscribers.Add(join.Sender);
+					System.Console.WriteLine("Added subscriber with PID: " + join.Sender.ToString());
 				}
 				break;
 
 			case Messages.LeaveChannel leave:
 				// context sender is empty as it's not a request/reply message but just a simple send mesage
-				_subscribers.Remove(sender);
+				_subscribers.Remove(leave.Sender);
 				break;
 
 			case Messages.IntValue inputNumber:
 				System.Console.Write(( _subscribers.Count > 0 ? "X" : "."));
-				Messages.IntValue msg = new Messages.IntValue() { Number = inputNumber.Number };
-				// is this the most efficient way? feels like duplication is taking place under the hood
+				_counter += inputNumber.Number;
+				Messages.IntValue msg = new Messages.IntValue() { Number = _counter };
+				// is this the most efficient way? feels like duplication is taking place under the hood. routers better i guess? ...
 				foreach(PID pid in _subscribers)
 				{
-					pid.Tell(msg);
+					context.Tell(pid, msg);
 				}
 				break;
 		}

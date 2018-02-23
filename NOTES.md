@@ -77,5 +77,24 @@ errors not caught:
 - reusing the same actor name
 
 
+-------
+other peoples projects:
+https://github.com/esbencarlsen/vivego
+https://github.com/CodingMilitia/ProtoActorSample/blob/master/src/CodingMilitia.ProtoActorSample.Client/Program.cs
+https://github.com/Vip56/FixNetAndCorefxDemo/tree/master/Middleware
 
-context.sender can be NULL when receiving a message !!!
+evenstream example
+https://github.com/copypastedeveloper/Proto.Actor.Demo/blob/e5d3936f078e1425574c8162e01ca5efb85ce92a/RemoteTodoAdder/Program.cs
+
+https://github.com/joaofbantunes/ActorPerEntityProtoActorSample/blob/68816de504dab8a2bde63310013d712b3bbea4b4/src/CodingMilitia.ActorPerEntityProtoActorSample.Client/Program.cs
+
+
+weakish error message. can't find the partition for the Props kind?
+
+            //Get Pid
+            var address = MemberList.GetPartition(name, kind);
+
+            if (string.IsNullOrEmpty(address))
+            {
+                return (null, ResponseStatusCode.Unavailable);
+            }

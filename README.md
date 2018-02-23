@@ -284,12 +284,13 @@ Clusters have a name, so you could run multiple ProtoActor clusters on the same 
 
 Cluster.get does a remote activation if needed. Duplication possible.
 
-The default solution to provide cluserting is Consul. In 
-consul the cluster name is the service name and each of those entries have tags for known actor kinds (actor configurators).
+The default solution to provide cluserting is Consul. In consul the cluster name is the service name and each of those entries have tags for known actor kinds (actor configurators).
 
 Cluster.Start: It starts the cluster module and joins the cluster. It is dependant on Consul so you need to have a consul agent running first. A better name would probably be "Cluster.Join"
 
 Cluster.Shutdown should really be called "Leave" as it informs your app to leave the cluster.
+
+Calls to Cluster.GetAsync may need to be repeated until success. In my test it took a while each time to actually have Get succeed. You can only get Root actors but not a child actor.
 
 ## Grain (Virtual Actor)
 Grains are an additional convienience layer that does a lot of things under the automatically. It requires to use ProtoActor Cluster.
@@ -349,12 +350,12 @@ Have an interface in case persitent schedulers are required.
 **context.tell**  This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
 
 **context.RequestAsync** Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
-**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used.
 
-**context.respond:** this is only for received Request messages (RPCs).
+**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used. This is only for received Request messages (RPCs).
 
 ## The many (and thus confusing) ways to send spawn an actor
 **Actor.Spawn** (and it's variations) spawns it as root Actor
+
 **context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
 
 

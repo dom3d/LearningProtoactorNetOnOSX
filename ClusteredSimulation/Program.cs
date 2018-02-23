@@ -47,8 +47,6 @@ namespace ClusteredSimulation
 				return;
 			}
 
-			// From here on, asuming that Consul Service is running
-
 			// Register protobuf messages
 			Serialization.RegisterFileDescriptor(Messages.MessagesReflection.Descriptor);
 
@@ -58,57 +56,35 @@ namespace ClusteredSimulation
 				Console.WriteLine("-h Mode: Heartbeat Node");
 
 				// actor setup definition and registration of that definition using a custom method extension
-				//Actor.FromProducer(() => new Heartbeat()).RegisterAs(Heartbeat.TypeName);
-				//Actor.FromProducer(() => new IntChannel()).RegisterAs(IntChannel.TypeName);
+				Props heartBeatSetup = Actor.FromProducer(() => new Heartbeat()).RegisterAs(Heartbeat.TypeName);
+				Props intChannel = Actor.FromProducer(() => new IntChannel()).RegisterAs(IntChannel.TypeName);
 
 				// Join cluster
+				Console.WriteLine("Joining cluster ...");
 				Cluster.Start(ClusterConfig.Name, HeartbeatNodeConfig.ip, HeartbeatNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
 
-				// Cluster Spawn with a timeout
+				Console.WriteLine("Spawning core actors ...");
 
-				Props heartBeatSetup = Actor.FromProducer(() => new Heartbeat());
-				Actor.SpawnNamed(heartBeatSetup, "HeartBeat");
-				//Remote.SpawnAsync(ClusterConfig.Name, Heartbeat.TypeName, TimeSpan.FromSeconds(5));
-				//Actor.Spawn(heartBeatKind); // this works but the Remote one not !
-				// Forcing actor creation by retrieven it via Cluster API
-				//ClusterHelpers.WaitUntilSpawned(Heartbeat.TypeName, "HeartBeatName", new TimeSpan(0, 0, 5));
+				// spawning both as root so they are visible from a Cluster.GetAsync perspective
+				PID beatPID = Actor.SpawnNamed(heartBeatSetup, Heartbeat.TypeName);
+				PID channelPID = Actor.SpawnNamed(intChannel, IntChannel.TypeName);
+				Console.WriteLine("... telling heartbeat about int channel ...");
+				beatPID.Tell(new Messages.TargetPID() { Target = channelPID });
 				Console.WriteLine("OK");
 
 			}
 			else if (args[0] == "-s")
 			{
-				Console.WriteLine("-s Mode");
-				// actor
-				//Actor.FromProducer(() => new Summariser()).RegisterAs(Summariser.TypeName);
-				//Remote.RegisterKnownKind(, summariserKind);
-
-				// Start the server and join the cluster.
+				Console.WriteLine("-s Mode: summariser. Using Cluster.GetASync");
 				Cluster.Start(ClusterConfig.Name, SumNodeConfig.ip, SumNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
-				//Remote.SpawnAsync(ClusterConfig.Name, Summariser.TypeName, TimeSpan.FromSeconds(2));
-				//Actor.Spawn(summariserKind);
-
-				/*
-				(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
-				while (taskResult.Item2 == ResponseStatusCode.Unavailable)
-				{
-					taskResult = Cluster.GetAsync("", Summariser.TypeName).Result;
-					System.Console.Write("?");
-				}
-				*/
-				//ClusterHelpers.WaitUntilSpawned(Summariser.TypeName, "", new TimeSpan(0, 0, 5));
 				var props = Actor.FromProducer(() => new Summariser());
 				Actor.Spawn(props);
 				Console.WriteLine("OK");
 			}
 			else if (args[0] == "-m")
 			{
-				Console.WriteLine("-m Mode");
-				// actor
-				//Props multiplierKind = Actor.FromProducer(() => new Multiplier());
-				//Remote.RegisterKnownKind(Multiplier.TypeName, multiplierKind);
-				// Start the server and join the cluster.
+				Console.WriteLine("-m Mode: multiplier. Using hardcoded PID via Remote");
 				Cluster.Start(ClusterConfig.Name, MultipNodeConfig.ip, MultipNodeConfig.port, new ConsulProvider(new ConsulProviderOptions()));
-				//Remote.SpawnAsync(ClusterConfig.Name, Multiplier.TypeName, TimeSpan.FromSeconds(2));
 				Props multiplierProps = Actor.FromProducer(() => new Multiplier());
 				Actor.Spawn(multiplierProps);
 
