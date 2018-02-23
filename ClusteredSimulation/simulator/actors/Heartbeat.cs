@@ -6,7 +6,7 @@ using Proto;
 using Proto.Remote;
 using Proto.Cluster;
 using Proto.Schedulers.SimpleScheduler;
-using ProtoExtensions;
+using DomsProtoUtils;
 
 sealed class Heartbeat : IActor
 {

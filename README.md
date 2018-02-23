@@ -358,6 +358,16 @@ Have an interface in case persitent schedulers are required.
 
 **context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
 
+## Retrieving a remote root actor via the Cluster
+```cs
+	// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
+	(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
+	while (taskResult.Item2 == ResponseStatusCode.Unavailable)
+	{
+		taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
+	}
+```
+
 
 # TBD
 

@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleRequestReplyInCluster", "SimpleRequestReplyInCluster\SimpleRequestReplyInCluster.csproj", "{29EDD706-9276-4746-8133-508E67F21B21}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestResponseInCluster", "SimpleRequestReplyInCluster\RequestResponseInCluster.csproj", "{29EDD706-9276-4746-8133-508E67F21B21}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketChat", "WebSocketChat\WebSocketChat.csproj", "{4036A3CE-91DC-4721-941C-A3A51A8522AF}"
 EndProject

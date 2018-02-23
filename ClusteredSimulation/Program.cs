@@ -5,7 +5,7 @@ using Proto;
 using Proto.Cluster;
 using Proto.Cluster.Consul;
 using Proto.Remote;
-using ProtoExtensions;
+using DomsProtoUtils;
 
 namespace ClusteredSimulation
 {

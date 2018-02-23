@@ -80,7 +80,6 @@ namespace SimpleRequestReplyInCluster
 	sealed class RequesterActor : IActor
 	{
 		public static readonly string TypeName = "RequesterAct";
-
 		private int counter = 0;
 
 		public Task ReceiveAsync(IContext context)
@@ -135,10 +134,13 @@ namespace SimpleRequestReplyInCluster
 			switch (context.Message)
 			{
 				case HelloRequest _:
-					context.Respond(new HelloResponse
-					{
-						Message = "Hello, this is a reply message from Anwsering Node."
-					});
+					context.Respond
+					(
+						new HelloResponse
+						{
+							Message = "Hello, this is a reply message from Anwsering Node."
+						}
+					);
 					Console.WriteLine("Received a request and replied.");
 					break;
 			}
