@@ -113,6 +113,8 @@ Documentation for Proto3 is here: https://developers.google.com/protocol-buffers
 Well known datatypes:
 https://github.com/google/protobuf/blob/master/src/google/protobuf/unittest_well_known_types.proto
 
+
+
 Grains, the typsafe request-response messaging approach in ProtoActor is using code-gen via a custom gRPC extension. Declare an Grain's (Virtual Actor)'s RPC interface via gRPC services like this:
 ```protobuf
 // (...)
@@ -145,6 +147,12 @@ public class HelloGrain : IHelloGrain
 		);
 	}
 }
+```
+
+When using RPCs you may want to have "void" input parameters. Protobuf doesn't not allow that and you have to use an empty message instead
+
+```protobuf
+message Empty { }
 ```
 
 # Understanding the API Layers
@@ -343,29 +351,51 @@ Have an interface in case persitent schedulers are required.
 # Using ProtoActor ...
 
 ## The many (and thus confusing) ways to send a message
-**pid.Tell** this posts the message to the maibox directly and ignores any middleware.
 
-**Remote.SendMessage**  wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
+**pid.Tell**
+```
+this posts the message to the maibox directly and ignores any middleware.
+```
 
-**context.tell**  This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
+**Remote.SendMessage**
+```
+wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
+```
 
-**context.RequestAsync** Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
+**context.tell**
+```
+This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
+```
 
-**context.Respond** Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used. This is only for received Request messages (RPCs).
+**context.RequestAsync**
+```
+Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
+```
 
-## The many (and thus confusing) ways to send spawn an actor
-**Actor.Spawn** (and it's variations) spawns it as root Actor
+**context.Respond**
+```
+Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used. This is only for received Request messages (RPCs).
+```
 
-**context.Spawn** (and it's variations) spawns it as child of the actor (actor.sef)
+## The many (and thus confusing) ways to spawn an actor
+**Actor.Spawn** (and it's variations)
+```
+spawns it as root Actor
+```
+
+**context.Spawn** (and it's variations)
+```
+spawns it as child of the actor (actor.sef)
+```
 
 ## Retrieving a remote root actor via the Cluster
 ```cs
-	// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
-	(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
-	while (taskResult.Item2 == ResponseStatusCode.Unavailable)
-	{
-		taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
-	}
+// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
+(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
+while (taskResult.Item2 == ResponseStatusCode.Unavailable)
+{
+	taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
+}
 ```
 
 
