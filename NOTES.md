@@ -98,3 +98,27 @@ weakish error message. can't find the partition for the Props kind?
             {
                 return (null, ResponseStatusCode.Unavailable);
             }
+
+=====
+
+performance pitsladd to check?
+
+Async Timeouts
+https://youtu.be/r738tcIstck?t=1438
+
+Timeout Cancellation tokens use timer under the hood which uses a global lock. So cancel those timers upon task success.
+https://youtu.be/r738tcIstck?t=1588
+
+Concurrent Dictionary: massive locking when using Count
+https://youtu.be/r738tcIstck?t=1683
+
+Overwrite Equals and GetHascode to avoid boxing
+https://youtu.be/r738tcIstck?t=2244
+
+Avoid locking where possible, e.g. central config data
+https://youtu.be/r738tcIstck?t=2675
+
+---
+
+https://www.youtube.com/watch?v=CSPSvBeqJ9c
+

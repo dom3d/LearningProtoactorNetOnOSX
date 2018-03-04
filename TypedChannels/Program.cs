@@ -2,9 +2,9 @@
 using Proto.Cluster;
 using Proto.Cluster.Consul;
 using Proto.Remote;
-using RPC;
+using Chat;
 
-namespace TypedChannelsExperiment
+namespace ChatWithGrainsExperiment
 {
 	class Program
 	{
@@ -17,7 +17,7 @@ namespace TypedChannelsExperiment
 				return;
 			}
 
-			Serialization.RegisterFileDescriptor(RPC.MessagesReflection.Descriptor);
+			Serialization.RegisterFileDescriptor(Chat.AllInOneReflection.Descriptor);
 
 			if (args[0] == "-a")
 			{
@@ -32,7 +32,7 @@ namespace TypedChannelsExperiment
 			{
 				Console.WriteLine("Node B Mode");
 				// declare grains
-				Grains.BasicChannelFactory(() => new TypedChannelGrain());
+				Grains.ChannelGrainFactory(() => new ChannelGrain());
 				// start cluster
 				Cluster.Start(NodeConfigA.ClusterName, NodeConfigA.ip, NodeConfigA.port, new ConsulProvider(new ConsulProviderOptions()));
 				Console.ReadLine();

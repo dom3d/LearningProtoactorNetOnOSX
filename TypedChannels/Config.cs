@@ -1,5 +1,5 @@
 ﻿using System;
-namespace TypedChannelsExperiment
+namespace ChatWithGrainsExperiment
 {
 	class NodeConfigA
 	{

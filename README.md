@@ -343,7 +343,7 @@ The RPC layer send the method name as string, increase the message size and amou
 All grains are accessible via the Gain namespace.
 
 
-http://proto.actor/docs/what%20is%20protoactor   
+http://proto.actor/docs/what%20is%20protoactor
 https://files.gitter.im/AsynkronIT/protoactor/kepm/blob
 https://files.gitter.im/AsynkronIT/protoactor/YqnA/blob
 A grain is a virtual actor, same as MS Orleans.. One can  specify RPC services in the proto files, and generate typed C# code and the Proto.Actor cluster will connect everything automatically. so node1 can ask for a grain of a specific type, and it will be found or created on another node
@@ -436,7 +436,9 @@ Anywhere in the cluster you can spawn or get a reference to the grain (client) l
 ```cs
 var client = Grains.MyGrainName("NameOfGrainInstance");
 ```
-Now you can call methods on it directly to trigger correspoding async requests.
+Now you can call methods on it directly by triggering correspoding async requests.
+
+Please note thay depsite grains using the request/reply pattern, that grains are not given any context object and therefore the sender PID is unknown within the grain. Workaround is to send it explicitly andthis of course increases the message size overall.
 
 # TBD
 

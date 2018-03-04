@@ -1,0 +1,38 @@
+syntax = "proto3";
+package messages;
+option csharp_namespace = "Chat";
+// import "lib/Proto.Actor/protos.proto";
+
+// RPCs can't have no return values. So an empty message is the recommended workaround. Their thinking is that it's easier to change your mind afterwards
+message Empty { }
+
+// generic, prob not really useful here.
+message OpSuccess { bool success = 1; }
+
+message TargetUser { string user = 1; }
+message MemberList { repeated string userList = 1; }
+message ChannelMsg { string user = 1; string channelName = 2; string msgText = 3; }
+message UserLeftUpdate { string user = 1; string text = 2; }
+message UserJoinedUpdate { string user = 1; }
+message TargetChannel { string channelName = 1; }
+
+
+// adding all grain service definitions into one file as the Grains compiler doesn't seem to handle multiple files with imports
+
+service ChannelGrain 
+{
+	rpc Add(TargetUser) returns (OpSuccess) {}
+	rpc Remove(TargetUser) returns (OpSuccess) {}
+	rpc GetMembers(Empty) returns (MemberList) {}
+	rpc BroadcastChatMsg(ChannelMsg) returns (OpSuccess) {}
+}
+
+service UserGrain
+{
+	rpc JoinChannel( TargetChannel ) returns (OpSuccess) {}
+	rpc LeaveChannel( TargetChannel ) returns (OpSuccess) {}
+	rpc TellChannelMsg ( ChannelMsg ) returns (Empty) {}
+	rpc TellSomeoneLeftChannel ( UserLeftUpdate ) returns (Empty) {}
+	rpc TellSomeoneJoinedChannel ( UserJoinedUpdate ) returns (Empty) {}
+}
+
