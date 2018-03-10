@@ -32,16 +32,7 @@ namespace ChatWithGrainsExperiment
 
 		public Task<MemberList> GetMembers(Empty request)
 		{
-			return Task.FromResult
-			(
-				new MemberList()
-				{
-					UserList = 
-					{
-						_members.ToArray()
-					}
-				}
-			);
+			return Task.FromResult ( new MemberList() { UserList = { _members.ToArray() } } );
 		}
 
 		public Task<OpSuccess> BroadcastChatMsg(ChannelMsg msg)

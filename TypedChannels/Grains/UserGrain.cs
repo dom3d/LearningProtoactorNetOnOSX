@@ -10,6 +10,10 @@ namespace ChatWithGrainsExperiment
 	{
 		public Task<OpSuccess> JoinChannel(TargetChannel request)
 		{
+			
+			var channelGrain = Grains.ChannelGrain(request.ChannelName);
+			Console.WriteLine(">> !! This is were it falls apart. I as grain, don't know my instance name.");
+			//channelGrain.Add();
 			throw new NotImplementedException();
 		}
 

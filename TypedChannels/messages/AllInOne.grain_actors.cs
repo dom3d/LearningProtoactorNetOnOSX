@@ -445,8 +445,9 @@ namespace Chat
                 if (res is GrainErrorResponse grainErrorResponse)
                 {
                     throw new Exception(grainErrorResponse.Err);
-                }
-                throw new NotSupportedException();
+				}
+				Console.WriteLine("!! >> UserGrain::JoinChannel failed with unexpected response: " + res.ToString());
+				throw new NotSupportedException("Request returned unexpected response: " + res.ToString());
             }
 
             for(int i= 0;i < options.RetryCount; i++)

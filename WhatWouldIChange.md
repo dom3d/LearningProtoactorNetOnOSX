@@ -43,3 +43,21 @@ Kind ->  RegisteredTemplate in TemplateRegistry
 
 ## context
 sender -> RequestSender // as this is null when used with Tell / standard messaging
+
+
+## Grains
+Grains.MyGrainFactory  is the thing that registers a grain into currently runing cluster node. The name does represent the behaviour. Also the Grains namespace will be polluted massively in a complex project.
+
+Grains.Register.MyGrain(factoryFunc)  is a lot better in my eyes.
+
+## Grain Client
+There is indeed an expection being throwing without giving any information about what's going on. Extremely bad error reporting.
+```cs
+                }
+                throw new NotSupportedException();
+```
+
+maybe?
+```cs
+throw new NotSupportedException("Request returned unexpected response: " + res.ToString());
+```

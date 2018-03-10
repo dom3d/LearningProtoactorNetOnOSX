@@ -196,8 +196,10 @@ The 'Remote' layer allows you to manually connect ProtoActor Instances. It provi
 ## Cluster
 'Cluster' automates the aspect of building and managing a grid of connected ProtoActor instances. (Intance is sometimes referred to as Node or Server). It relies on 3rd party solutions such as Consul. An instances joins and leaves a Cluster via the Cluster API.
 
-## Virtual Actors (Grains)
-This feature automates the placement and spawning of Actors in a Cluster. This is mostly achieved by defining the RPC interfaces via protobuf definition files.
+## Grains (Virtual Actors)
+Using Grains in ProtoActor is not really just another feature layer. It's overall a different approach where you don't manage actors directly.
+
+This is automatic actor creation, cluster placement and spawning. This is mostly achieved by defining the RPC interfaces via protobuf definition files and using a custom code generators.
 
 # Terminology
 **(Warning might not always be accurate)**
@@ -205,7 +207,7 @@ This feature automates the placement and spawning of Actors in a Cluster. This i
 ## Influences
 Protoactors uses terms from various frameworks, so in doubt, checkout their documentation. For example "Props" comes from the Akka world, Grains from the Orleans world and Process and Mailbox from the Erlang world.
 
-The main author of ProtoActor ported **Akka** to DotNet. "Akka" for Java/JVM was inspired by Erlang and it's OTP. This time ProtoActor also took inspirations from Microsoft's **Orleans** and the simplicity experienced when working with  go-lang.
+The main author of ProtoActor ported **Akka** to DotNet. "Akka" for Java/JVM was inspired by Erlang and it's OTP. This time ProtoActor also took inspirations from Microsoft's **Orleans** and the simplicity experienced when working with go-lang.
 
 ## Breakdown of Elements
 
@@ -326,7 +328,7 @@ Cluster.Shutdown should really be called "Leave" as it informs your app to leave
 Calls to Cluster.GetAsync may need to be repeated until success. In my test it took a while each time to actually have Get succeed. You can only get Root actors but not a child actor.
 
 ## Grain (Virtual Actor)
-Grains are an additional convienience layer that does a lot of things under the automatically. It requires to use ProtoActor Cluster.
+Grains are a convienience mecahnic that does a lot of the actor management under the hood automatically for you. It also strictly uses typed RPC for communicationa and it requires to use ProtoActor Cluster.
 
 - automatic creation in ProtoActor nodes that called the Grain's factory
 - automatic activation
@@ -350,6 +352,13 @@ A grain is a virtual actor, same as MS Orleans.. One can  specify RPC services i
 If you are using cluster, you can generate "Grains" using the protoc grain generator.. those are typed actors with an RPC like interface (much like Microsoft Orleans)
 when you use that, it will handle failover for you
 Grains in ProtoActor works like this: you generate grains from a Protobuf Service dfinition.. this gives you two things, a client that can talk to the grain , and a server interface which you need to implement
+
+To tell in which cluster node a specific grain can be spawned, you need to call the factory in code of that node:
+
+```cs
+Grains.MyGrainFactory(() => new MyGrain());
+```
+I think it would be better to name this:  Grains.Register.MyGrain(...factory ...)
 
 ## Flexibility via Props
 
