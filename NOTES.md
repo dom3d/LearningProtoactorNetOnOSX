@@ -122,3 +122,44 @@ https://youtu.be/r738tcIstck?t=2675
 
 https://www.youtube.com/watch?v=CSPSvBeqJ9c
 
+-------
+
+
+broadcast
+so:
+Hash all names, finding out all partitions
+Ask all partitions for the location of all actors in the list for that partition
+Wait for all partitions to respond
+group by host
+send a special message to a special actor on each host, that broadcasts the message to the target actors.
+and just hash all names, group by partition, send a broadcast message to each partition.
+each partition then groups by target host, and forwards the broadcast
+
+
+each node registers what actor "Kinds" its capable of spawning,
+when you say Get("Roger","User") it will know exactly what nodes can spawn that
+"what actor kinds do I support"
+
+untyped Receive actors, or to code-genned typed actors
+
+
+This is a sketch on how it works. instead of having one partition actor, there is now one partition actor per registered kind for that node.
+Membership status changes/events are sent via the actor.EventStream. so the cluster provider publishes events, the Membership actor subscribes to them and publishes more finegrained events
+those finegrained events are then routed to the relevant partition actors
+
+
+remotewatch: : This shows how you can watch remote actors and get notified if the node crashes
+
+
+
+ctx.Spawn(routing.FromGroupRouter(routing.NewBroadcastGroup(pids...)))
+
+
+
+
+-------
+# Mechanics
+Spawning : Local, Remote, Cluster, Grain
+
+
+

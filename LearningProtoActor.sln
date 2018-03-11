@@ -1,9 +1,9 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestResponseInCluster", "SimpleRequestReplyInCluster\RequestResponseInCluster.csproj", "{29EDD706-9276-4746-8133-508E67F21B21}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestResponseInCluster", "RequestResponseInCluster\RequestResponseInCluster.csproj", "{29EDD706-9276-4746-8133-508E67F21B21}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketChat", "WebSocketChat\WebSocketChat.csproj", "{4036A3CE-91DC-4721-941C-A3A51A8522AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ignore", "Ignore\Ignore.csproj", "{4036A3CE-91DC-4721-941C-A3A51A8522AF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5FCD29B2-1829-4EC3-AD50-E2CF2741C33C}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,13 +12,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NOTES.md = NOTES.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClusteredSimulation", "ClusteredSimulation\ClusteredSimulation.csproj", "{85EF4939-FC45-471C-8087-1C326F1C92D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClusteredActors", "ClusteredActors\ClusteredActors.csproj", "{85EF4939-FC45-471C-8087-1C326F1C92D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Experiments", "Experiments\Experiments.csproj", "{EB1B5871-48D8-4E06-995B-0E649806998A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Issue_SenderIsNull", "Issue_SenderIsNull\Issue_SenderIsNull.csproj", "{90EF9E06-9E8D-424F-B716-3983E9B154AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContextSenderIsNull", "ContextSenderIsNull\ContextSenderIsNull.csproj", "{90EF9E06-9E8D-424F-B716-3983E9B154AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedChannelsExperiment", "TypedChannels\TypedChannelsExperiment.csproj", "{6AA6FF0D-DDA7-4D4D-9516-5B3BE242D4E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrainsChatExperiment", "GrainsChatExperiment\GrainsChatExperiment.csproj", "{6AA6FF0D-DDA7-4D4D-9516-5B3BE242D4E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
