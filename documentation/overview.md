@@ -32,3 +32,5 @@ The main author of ProtoActor ported **Akka** to DotNet. "Akka" for Java/JVM was
 
 Protoactors uses terms from various frameworks but first of all from Akka / Akka.Net. Example: "Props". Grains comes from the Orleans world and Process and Mailbox from the Erlang world.
 
+[back](../README.md)
+

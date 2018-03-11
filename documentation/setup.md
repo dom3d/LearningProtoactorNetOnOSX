@@ -78,4 +78,4 @@ DotNetCore console app is not an exe like when using Mono but a DLL. Run it like
 
 	dotnet MyAppName.dll
 
-
+[back](../README.md)

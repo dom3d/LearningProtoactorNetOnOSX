@@ -16,4 +16,6 @@ Cluster.Shutdown should really be called "Leave" as it informs your app to leave
 
 Calls to Cluster.GetAsync may need to be repeated until success. In my test it took a while each time to actually have Get succeed. You can only get Root actors but not a child actor.
 
+A cluster is patitioned automatically by 'kind' using a PartitionActor.
+
 [back](../README.md)

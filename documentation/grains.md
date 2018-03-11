@@ -113,3 +113,5 @@ var client = Grains.MyGrainName("NameOfGrainInstance");
 Now you can call methods on it directly by triggering correspoding async requests.
 
 Please note thay depsite grains using the request/reply pattern, that grains are not given any context object and therefore the sender PID is unknown within the grain. Workaround is to send it explicitly andthis of course increases the message size overall.
+
+[back](../README.md)

@@ -35,9 +35,7 @@ When an Actor is spawned by another Actor as child, the given ID is the hierachi
 
 	{ "Address": "127.0.0.1:12005", "Id": "ParentName/ChildName" }
 
-PID has an API to send message but those messages hit the mailbox directly and ignore any "Props" configuration of the actor and therefore middlewares are ignored.
-
-PID is somewhat "polluted" with some conviences methods such as: Tell, Request, SendSystemMessage, Stop. Eventually the use the ProcessRegistry to get a reference to the Process instance itself.
+PID has an API to send message but those messages hit the mailbox directly and ignore any "Props" configuration of the actor and therefore middlewares are ignored. PID is somewhat "polluted" with some conviences methods such as: Tell, Request, SendSystemMessage, Stop. Eventually it uses the ProcessRegistry under the hood to get a reference to the Process instance itself.
 
 An ID has to be unique across the system and across a manual remoting setup or a cluster.
 
@@ -45,37 +43,129 @@ An ID has to be unique across the system and across a manual remoting setup or a
 Provides IDs for new Process/Actor instances. If a name is not given for a new actor, then the ProcessRegistry will create one based on "$" + internal counter.
 
 ### Mailbox
-The Mailbox is the thing that stores messages that a Process received. It actually also covers the triggering of reactive processing as Tasks across Threads.
+The Mailbox is the thing that stores messages that a Process received. It actually also covers the triggering of reactive processing as Tasks across Threads. Mailbox is replacable with a custom implementation if needed.
 
 ### Context
 Context is passed to an Actor's receive method and contains the Actor's setup and message and related APIs, such as:
 
 - received message
-- configuration (middleware etc)
-- hierachy
+- props configuration (middleware etc)
+- hierarchy
 
-While processing a message in an actor, you can access the following via the Context object:
+While processing a message inside an actor, you can access the following via the Context object:
 
 - the actor's PID via context.Self
 - the actor's parent PID via context.Parent
 - ability to send messages. Doing this via the context makes message go through the configure middleware
-- sender's PID for request based messages: context.Sender. WARNING can be NULL !!! Only send when reply expect thus only when Request is used. Should be named: RequestSender
-- methods to spawn actors as children (spawn method names of the context are not explicitly saying so unfortnuately.)
+- sender's PID for request based messages: context.Sender. WARNING can be NULL !!! Only set when a reply expected - in other words only set for Request-Reply based actor messaing. In your head think of: RequestSenderPID
+- methods to spawn actors as children (the spawn method names of the context are not explicitly stating this unfortnuately)
 - stash pending messages e.g. for recovery purposes
 etc.
 
-## Props
-Props is the configurator of an Actor - it holds the recipe of how to configure a specific Actor when the Actor gets spawned.
+## Messaging
+Protobuf is used by default for serialisation and deserialisation of ProtoActor Messages. One defines messages 
+...
+
+todo
+* registration of messages
+* how to send messages (variations)
+* how to process messages
+
+ http://proto.actor/docs/messages
+
+one thing to consider: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone).
+
+### The many (and thus confusing) ways to send a message
+
+**pid.Tell**
+```
+this posts the message to the maibox directly and ignores any middleware.
+```
+
+**Remote.SendMessage**
+```
+wraps the message into an evelope end sends it out right away via RemoteDelivery of the EndpointManager
+```
+
+**context.tell**
+```
+This sends a message to the target PID and respects the middleware setup as defined via Props/Kind.
+```
+
+**context.RequestAsync**
+```
+Request-Response based message. The message gets packed into a MessagEnvelope. This is the request part.
+```
+
+**context.Respond**
+```
+Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used. This is only for received Request messages (RPCs).
+```
+
+
+**SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
+**UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
+**MessageEnvelope:** The meta-data of a message. This is used for Request-Reply based messaging (only?). It holds references to the message, the sender, the target and the message header
+**MessageHeader:** String-based Key-Value store with meta data for the message. Confusion trap due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
+**DeadLetter:** http://proto.actor/docs/durability
+
+## Props & Kinds
+Props is the configurator of an Actor - it holds the recipe of how to configure a specific Actor when the Actor gets spawned. 
 
 The 'Props' is taken from movies and theather where an object, that is used (on stage or on screen) by actors during a performance or screen production, is called a prop.
 
-Sometimes Props is also referred to as "kind" in ProtoActor. You register a Kind by handing over a Prop and it's name.
+Sometimes Props is also referred to as "kind" in ProtoActor. You register a Kind by handing over a Prop and give it a name.
 
 Props define what creates the actor, what kind of messaging middleware is to use, what supervision strategy to put in place, and even what kind of mailbox to use.
 
-A cluster is patitioned automatically by 'kind' using a PartitionActor.
-
 Alternative name you can keep in your mind for Props that could be suiteable are: Configurator, Template, Receipe, Setup, Builder, Schema.
+
+### Props: Middlewaremessage handler or transformator that plugs into the path of a message to it's end destination.
+
+Middleware example: adding debug infos into the messaging flow of an actor:
+https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloProto/SupervisorActor.cs
+
+### Props: Routing
+message forwarder or multiplier
+Somebody said: "I'm using round robin, consistent hash and broadcast routers in my chat server"
+
+
+
+## Supervision and Hierarchies
+
+**Supervision:** Ability of an actor to spawn or despawn other actors and thus restart them on failure or for other scnearios. Directives are: Resume, Restart, Stop, Escalate
+If I restart an actor with the supervision strategy is the PID the same? Yes, same PID, messages should still be in the mailbox and start coming as soon as actor is restarted
+the message that caused the failure will be lost however unless you explicitly stash it
+ proper way to kill a child actor from a parent? PID.Stop();
+ Parent is only available when you spawn via the Context and the primary reason to do that is for supervision. If the child fails, that is escalated to the parent. If you don't plan to use supervision then you can also just embed Self in a message
+
+**Supervision Strategy:** a pattern or recipe for how to handle failure in children. For example restart all children when one child fails. etc.
+**Watcher / Watching:** if an Actors dies that is watched, the Watcher received a notification about the Termination.
+**Parent:** Parents are implicitly watching their children (parent Actors that is).
+
+# The many (and thus confusing) ways to spawn an actor
+**Actor.Spawn** (and it's variations)
+```
+spawns it as root Actor
+```
+
+**context.Spawn** (and it's variations)
+```
+spawns it as child of the actor (actor.sef)
+```
+
+## Retrieving a remote root actor via the Cluster
+```cs
+// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
+(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
+while (taskResult.Item2 == ResponseStatusCode.Unavailable)
+{
+	taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
+}
+```
+
+## Schedulers
+Have an interface in case persitent schedulers are required.
 
 ## Remote
 Remote is the layer that allows to connect ProtoActor instances with each other. Peering ProtoActor instanecs over network basically. Each instance becomes a node with an Endpoint; a server with an adresss.
@@ -92,98 +182,7 @@ Remote Start will start the gRPC server on the given IP and Port. Maybe "Peering
 
 Ability to watch a remote Actor: When a node is disconnected, and if someone is watching an actor on that node, then the EndpointWatcher is supposed to fire a Terminated event for that actor.
 
-ProtoActor dont support remote supervision, when you spawn remote actors they are root actors on the remote system.
-
-## Activations / Activator
-"Named" Activations - is spawning an Actor via it's kind using unique name across kinds and acts as global ID of the register kind. It's possible to register multiple kinds with the same name without errors, unfortunately.
-
-Spawning is done by a special system actor called Activator. It's one of those hidden things that appear here and there in the API but isn't very explicit.
-
-
-# Quick intro to working with .proto files
-ProtoActor uses Google's Protobuffer which is a serialisation solution that uses code-generation. One has to define the messages in a .proto file and then compile them with a standalone tool.
-
-Below a simple example for a message. ( filename: messages.proto )
-```protobuf
-// format / version header
-syntax = "proto3";
-// namespace comes from the package name unless cssharp_namespace is used
-package messages;
-// it's a bit redundant here but more complex namescpaes possible if desired
-option csharp_namespace = "Messages";
-
-message MessageWithoutData {}
-message MessageWithSingleStringField
-{
-	// the =1 part is the field position
-	string StringData=1;
-}
-```
-
-Make sure that you include into your project the generated **xyz.g.cs** file.
-
-Then in C#
-```CS
-
-// "Messages." part comes from the declared namespace in protobuf
-// "MessagesReflection" part is based on protobuf file-name (here messages.proto)
-using ExampleProtocol = Messages.MessagesReflection;
-
-// (...)
-	// Register protobuf messages in ProtoActor
-	Serialization.RegisterFileDescriptor(ExampleProtocol.Descriptor);
-
-```
-If you want to reference other Protobuf message types from within a Protobuf file, use imports. Example:
-```protobuf
-// header
-syntax = "proto3";
-package messages;
-import "shared/shared.proto";
-option csharp_namespace = "Messages";
-```
-
-If you want to reference ProtoActor data types (e.g. PID) or message types, download the 3rd party folders and put them into a subfolder. Example:
-```protobuf
-syntax = "proto3";
-package messages;
-option csharp_namespace = "Messages";
-// import
-import "lib/Proto.Actor/protos.proto";
-// using the imported type via it's namespace
-message JoinChannel { actor.PID sender = 1; }
-```
-
-Documentation for Proto3 is here: https://developers.google.com/protocol-buffers/docs/proto3
-
-Well known datatypes:
-https://github.com/google/protobuf/blob/master/src/google/protobuf/unittest_well_known_types.proto
-
-
-
-
-## Flexibility via Props
-
-**Router:** message forwarder or multiplier
-Somebody said: "I'm using round robin, consistent hash and broadcast routers in my chat server"
-
-**Middleware:** message handler or transformator that plugs into the path of a message to it's end destination.
-
-Middleware example: adding debug infos into the messaging flow of an actor:
-https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloProto/SupervisorActor.cs
-
-**Supervision:** Ability of an actor to spawn or despawn other actors and thus restart them on failure or for other scnearios. Directives are: Resume, Restart, Stop, Escalate
-If I restart an actor with the supervision strategy is the PID the same? Yes, same PID, messages should still be in the mailbox and start coming as soon as actor is restarted
-the message that caused the failure will be lost however unless you explicitly stash it
- proper way to kill a child actor from a parent? PID.Stop();
- Parent is only available when you spawn via the Context and the primary reason to do that is for supervision. If the child fails, that is escalated to the parent. If you don't plan to use supervision then you can also just embed Self in a message
-
-**Supervision Strategy:** a pattern or recipe for how to handle failure in children. For example restart all children when one child fails. etc.
-**Watcher / Watching:** if an Actors dies that is watched, the Watcher received a notification about the Termination.
-**Parent:** Parents are implicitly watching their children (parent Actors that is).
-**Schedulers:**
-Have an interface in case persitent schedulers are required.
-
+ProtoActor doesn't support remote supervision, when you spawn remote actors they are root actors on the remote system.
 -------------
 
 .md)
@@ -200,15 +199,8 @@ http://proto.actor/docs/actors  :  An actor is a container for State, Behavior, 
 
 **Actor Spawning**: creation of a LocalContext and a LocalProcess (with a new Mailbox) that is registered in the ProcessRegistry to get a unique PID. A first SystemMessage (Started) is sent to the Actor.
 
-**Message:** http://proto.actor/docs/messages
 
-one thing to consider: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone).
 
-**SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
-**UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
-**MessageEnvelope:** The meta-data of a message. This is used for Request-Reply based messaging (only?). It holds references to the message, the sender, the target and the message header
-**MessageHeader:** String-based Key-Value store with meta data for the message. Confusion trap due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
-**DeadLetter:** http://proto.actor/docs/durability
 **Dispatcher:** ?
 **EventBus** is the central message bus used by the cluster or system (?). Access via Instance Singleton. subscribe to member status events and the like. e.g. EventStream.Instance.Subscribe(...)
 
@@ -288,6 +280,11 @@ Actor destruction: pid.Stop()
 # Mechanics
 Spawning : Local, Remote, Cluster, Grain
 
+## Activations / Activator
+"Named" Activations - is spawning an Actor via it's kind using unique name across kinds and acts as global ID of the register kind. It's possible to register multiple kinds with the same name without errors, unfortunately.
+
+Spawning is done by a special system actor called Activator. It's one of those hidden things that appear here and there in the API but isn't very explicit.
 
 
+[back](../README.md)
 
