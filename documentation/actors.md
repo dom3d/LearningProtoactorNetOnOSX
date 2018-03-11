@@ -63,17 +63,11 @@ While processing a message inside an actor, you can access the following via the
 etc.
 
 ## Messaging
-Protobuf is used by default for serialisation and deserialisation of ProtoActor Messages. One defines messages 
-...
+Protobuf is used by default for serialisation and deserialisation of ProtoActor Messages. One defines messages proto files which you need to compile via the command line. This will create C# code that has to be added to your solution. Details are on a separate page:
 
-todo
-* registration of messages
-* how to send messages (variations)
-* how to process messages
+[Protobuf for ProtoActor details](proto.md)
 
- http://proto.actor/docs/messages
-
-one thing to consider: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone).
+One thing to keep in mind: while protoactor uses queues internally to route messages to actors, those queues are just in-memory (meaning if the process dies your messages are gone).
 
 ### The many (and thus confusing) ways to send a message
 
@@ -101,13 +95,16 @@ Request-Response based message. The message gets packed into a MessagEnvelope. T
 ```
 Request-Response based message. This is the response part. context.Sender is actually not null in this case and can be used. This is only for received Request messages (RPCs).
 ```
+### ProtoActor's builtin messages
 
-
+**UserMessage:** custom messages defined by you for your app. Use the "Tell" or "SendUserMessage" API.
 **SystemMessage:** a predefined message by the Protoactor framework such as Stop. Use the "SendSystemMessage" API
-**UserMessage:** custom messages defined for the app. Use the "Tell" or "SendUserMessage" API.
-**MessageEnvelope:** The meta-data of a message. This is used for Request-Reply based messaging (only?). It holds references to the message, the sender, the target and the message header
-**MessageHeader:** String-based Key-Value store with meta data for the message. Confusion trap due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
-**DeadLetter:** http://proto.actor/docs/durability
+**MessageEnvelope:** The meta-data of a message. This is used for Request-Reply based messaging. It holds references to the message, the sender, the target and the message header
+**MessageHeader:** String-based Key-Value store with meta data for the message. Some confusion risk due to bad naming imho: Header vs Headers; it's a single header dictionary but setting a value means "setting the header"
+**DeadLetter:** Message saying an actor doesn't exist any more. More details here: http://proto.actor/docs/durability
+
+### Official documentation for messages:
+http://proto.actor/docs/messages
 
 ## Props & Kinds
 Props is the configurator of an Actor - it holds the recipe of how to configure a specific Actor when the Actor gets spawned. 
@@ -129,8 +126,6 @@ https://github.com/bnayae/ProtoActorPlayground/blob/master/src/HeloWorld/HelloPr
 message forwarder or multiplier
 Somebody said: "I'm using round robin, consistent hash and broadcast routers in my chat server"
 
-
-
 ## Supervision and Hierarchies
 
 **Supervision:** Ability of an actor to spawn or despawn other actors and thus restart them on failure or for other scnearios. Directives are: Resume, Restart, Stop, Escalate
@@ -143,7 +138,7 @@ the message that caused the failure will be lost however unless you explicitly s
 **Watcher / Watching:** if an Actors dies that is watched, the Watcher received a notification about the Termination.
 **Parent:** Parents are implicitly watching their children (parent Actors that is).
 
-# The many (and thus confusing) ways to spawn an actor
+### The many (and thus confusing) ways to spawn an actor
 **Actor.Spawn** (and it's variations)
 ```
 spawns it as root Actor
@@ -152,16 +147,6 @@ spawns it as root Actor
 **context.Spawn** (and it's variations)
 ```
 spawns it as child of the actor (actor.sef)
-```
-
-## Retrieving a remote root actor via the Cluster
-```cs
-// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
-(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
-while (taskResult.Item2 == ResponseStatusCode.Unavailable)
-{
-	taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
-}
 ```
 
 ## Schedulers

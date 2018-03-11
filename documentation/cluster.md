@@ -18,4 +18,15 @@ Calls to Cluster.GetAsync may need to be repeated until success. In my test it t
 
 A cluster is patitioned automatically by 'kind' using a PartitionActor.
 
+
+## Retrieving a remote root actor via the Cluster
+```cs
+// example approach. In my tests I often needed to wait a good chunk of time for the first get, so here is one way to handle that
+(PID, ResponseStatusCode) taskResult = (null, ResponseStatusCode.Unavailable);
+while (taskResult.Item2 == ResponseStatusCode.Unavailable)
+{
+	taskResult = Cluster.GetAsync("ActorInstanceName", "ActorRegisteredKindName").Result;
+}
+```
+
 [back](../README.md)
